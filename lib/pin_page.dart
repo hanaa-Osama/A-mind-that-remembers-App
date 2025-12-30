@@ -1,0 +1,177 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'home_page.dart';
+import 'verify_security.dart';
+
+class PinPage extends StatefulWidget {
+  const PinPage({super.key});
+
+  @override
+  State<PinPage> createState() => _PinPageState();
+}
+
+class _PinPageState extends State<PinPage> {
+  final TextEditingController pinController = TextEditingController();
+  String? savedPin;
+
+  static const Color powderPink = Color(0xFFF4C2C2);
+  static const Color warmBeige = Color(0xFFF5E6D3);
+  static const Color roseGold = Color(0xFFB76E79);
+  static const Color purplePink = Color(0xFFC48BCB);
+
+  @override
+  void initState() {
+    super.initState();
+    loadSavedPin();
+  }
+
+  Future<void> loadSavedPin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      savedPin = prefs.getString("userPin");
+    });
+  }
+
+  void checkPin() {
+    String enteredPin = pinController.text.trim();
+
+    if (enteredPin.length != 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "الرجاء إدخال رمز سري مكوّن من 4 أرقام",
+            style: TextStyle(fontFamily: 'Tajawal'),
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (enteredPin == savedPin) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "الرمز الذي أدخلته غير صحيح",
+            style: TextStyle(fontFamily: 'Tajawal'),
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: powderPink,
+      appBar: AppBar(
+        title: const Text(
+          "تسجيل الدخول",
+          style: TextStyle(
+            fontFamily: 'Tajawal',
+            color: purplePink,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: powderPink,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(25),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              "أدخل الرمز السري",
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: purplePink,
+              ),
+              textDirection: TextDirection.rtl,
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: pinController,
+              keyboardType: TextInputType.number,
+              maxLength: 4,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                fontSize: 22,
+              ),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: warmBeige,
+                counterText: "",
+                hintText: "••••",
+                hintStyle: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  color: Colors.grey,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: roseGold),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide:
+                  const BorderSide(color: roseGold, width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 25),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: checkPin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: roseGold,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 60, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  "تأكيد",
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const VerifySecurityPage(),
+                  ),
+                );
+              },
+              child: const Text(
+                "نسيت الرمز السري؟",
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 18,
+                  color: roseGold,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
