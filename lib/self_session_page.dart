@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'lib/widgets/delete_alert_dialog.dart';
+
 class SelfSessionPage extends StatefulWidget {
   const SelfSessionPage({super.key});
 
@@ -306,15 +308,25 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                                 subtitle: Text(date),
                                 onTap: () =>
                                     _openSessionDetails(s),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red),
-                                  onPressed: () async {
-                                    await _deleteSession(s['id']);
-                                    modalSetState(() {});
-                                    setState(() {});
-                                  },
-                                ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      final confirm = await DeleteConfirmDialog.show(
+                                        context: context,
+                                        title: 'حذف الجلسة',
+                                        message: 'هل أنت متأكد من حذف هذه الجلسة؟\nلا يمكن التراجع عن هذا الإجراء.',
+                                        confirmText: 'حذف',
+                                        cancelText: 'إلغاء',
+                                      );
+
+                                      if (confirm == true) {
+                                        await _deleteSession(s['id']);
+                                        modalSetState(() {});
+                                        setState(() {});
+                                      }
+                                    },
+                                  ),
+
                               ),
                             );
                           },

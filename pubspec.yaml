@@ -15,7 +15,9 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  local_auth: ^2.3.0
   shared_preferences: ^2.2.2
+  fluttertoast: ^9.0.0
   intl: ^0.20.2
   image_picker: ^1.1.1
   flutter_sound: ^9.2.13
@@ -33,14 +35,12 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: true
-  ios: false
-  image_path: "assets/icons/launcher_icon.png"
+  ios: true
+  image_path: "assets/icons/appIcon.png"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/icons/launcher_icon.png"
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/
-    - assets/icons/launcher_icon.png
+    - assets/icons/

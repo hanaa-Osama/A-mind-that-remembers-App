@@ -107,7 +107,7 @@ class _MemoriesListPageState extends State<MemoriesListPage> {
               trailing: IconButton(
                 icon: const Icon(
                   Icons.delete_outline,
-                  color: Colors.red,
+                  color: Colors.blue,
                 ),
                 onPressed: () => deleteMemory(index),
                 tooltip: "حذف الذكرى",

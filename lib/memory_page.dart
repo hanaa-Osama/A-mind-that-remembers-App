@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path/path.dart' as p;
+
+import 'lib/widgets/delete_alert_dialog.dart';
 
 class MemoryPage extends StatefulWidget {
   const MemoryPage({super.key});
@@ -77,10 +80,9 @@ class _MemoryPageState extends State<MemoryPage> {
   }
 
   Future<void> _saveMemory() async {
-    if (titleController.text.trim().isEmpty &&
-        textController.text.trim().isEmpty &&
-        selectedVideo == null &&
-        audioPath == null) {
+    if (titleController.text.trim().isEmpty ||
+        textController.text.trim().isEmpty ||
+        selectedVideo == null && audioPath == null) {
       _snack("أضف محتوى للذكرى أولًا");
       return;
     }
@@ -116,12 +118,14 @@ class _MemoryPageState extends State<MemoryPage> {
     if (!recorderReady) return;
 
     if (!isRecording) {
-      final path =
-          "${Directory.systemTemp.path}/memory_${DateTime.now().millisecondsSinceEpoch}.aac";
-      await recorder.startRecorder(
-        toFile: path,
-        codec: Codec.aacADTS,
+      final dir = await getApplicationDocumentsDirectory();
+      final path = p.join(
+        dir.path,
+        'memory_audio_${DateTime.now().millisecondsSinceEpoch}.aac',
       );
+
+      await recorder.startRecorder(toFile: path, codec: Codec.aacADTS);
+
       audioPath = path;
       setState(() => isRecording = true);
     } else {
@@ -137,12 +141,21 @@ class _MemoryPageState extends State<MemoryPage> {
     final XFile? x = await picker.pickVideo(source: ImageSource.camera);
     if (x == null) return;
 
-    final file = File(x.path);
+    final dir = await getApplicationDocumentsDirectory();
+    final newPath = p.join(
+      dir.path,
+      'memory_video_${DateTime.now().millisecondsSinceEpoch}.mp4',
+    );
+
+    final savedVideo = await File(x.path).copy(newPath);
+
     previewController?.dispose();
-    previewController = VideoPlayerController.file(file);
+    previewController = VideoPlayerController.file(savedVideo);
     await previewController!.initialize();
 
-    setState(() => selectedVideo = file);
+    setState(() {
+      selectedVideo = savedVideo;
+    });
   }
 
   void _openHistory() {
@@ -156,53 +169,62 @@ class _MemoryPageState extends State<MemoryPage> {
       builder: (_) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: memories.length,
-              itemBuilder: (context, index) {
-                final m = memories[index];
-                final date = DateFormat(
-                  'EEEE d MMMM yyyy – hh:mm a',
-                  'ar',
-                ).format(DateTime.parse(m['createdAt']));
+            return Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: memories.length,
+                itemBuilder: (context, index) {
+                  final m = memories[index];
+                  final date = DateFormat(
+                    'EEEE d MMMM yyyy – hh:mm a',
+                    'ar',
+                  ).format(DateTime.parse(m['createdAt']));
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: ListTile(
-                    onTap: () => _openDetails(m, index),
-                    title: Text(
-                      "📝 ${m['title'].isEmpty ? "ذكرى بدون عنوان" : m['title']}",
-                      textAlign: TextAlign.right,
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
                     ),
-                    subtitle: Text(
-                      "📅 $date",
-                      textAlign: TextAlign.right,
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_forever,
-                          color: Colors.red),
-                      onPressed: () async {
-                        memories.removeAt(index);
+                    child: ListTile(
+                      onTap: () => _openDetails(m, index),
+                      title: Text(
+                        "📝 ${m['title'].isEmpty ? "ذكرى بدون عنوان" : m['title']}",
+                        textAlign: TextAlign.right,
+                      ),
+                      subtitle: Text("📅 $date", textAlign: TextAlign.right),
+                      trailing: IconButton(
+                        icon: const Icon(
+                          Icons.delete_forever,
+                          color: Colors.red,
+                        ),
+                        onPressed: () async {
+                          final confirm = await DeleteConfirmDialog.show(
+                            context: context,
+                            title: 'حذف الذكرى',
+                            message: 'هل أنت متأكد من حذف هذه الذكرى؟\nلا يمكن التراجع عن هذا الإجراء.',
+                            confirmText: 'حذف',
+                            cancelText: 'إلغاء',
+                          );
 
-                        final prefs =
-                        await SharedPreferences.getInstance();
-                        await prefs.setStringList(
-                          'memories',
-                          memories
-                              .reversed
-                              .map((e) => jsonEncode(e))
-                              .toList(),
-                        );
+                          if (confirm == true) {
+                            memories.removeAt(index);
 
-                        setModalState(() {});
-                      },
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setStringList(
+                              'memories',
+                              memories.reversed.map((e) => jsonEncode(e)).toList(),
+                            );
+
+                            setModalState(() {});
+                          }
+                        },
+                      ),
+
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             );
           },
         );
@@ -211,117 +233,145 @@ class _MemoryPageState extends State<MemoryPage> {
   }
 
   void _openDetails(Map<String, dynamic> m, int index) {
-    VideoPlayerController? detailsVideoController;
-    if (m['video'] != null) {
-      detailsVideoController =
-      VideoPlayerController.file(File(m['video']))
-        ..initialize();
-    }
+    VideoPlayerController? controller;
 
     showDialog(
       context: context,
-      builder: (_) {
-        final date = DateFormat(
-          'EEEE d MMMM yyyy – hh:mm a',
-          'ar',
-        ).format(DateTime.parse(m['createdAt']));
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // initialize video once
+            if (m['video'] != null && controller == null) {
+              controller = VideoPlayerController.file(File(m['video']));
+              controller!.initialize().then((_) {
+                setState(() {});
+              });
+            }
 
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20)),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  "📝 ${m['title']}",
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text("📅 $date"),
-                const Divider(),
-                if (m['text'] != null &&
-                    m['text'].toString().isNotEmpty)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          "✍️ ${m['text']}",
-                          textAlign: TextAlign.right,
-                        ),
+            final date = DateFormat(
+              'EEEE d MMMM yyyy – hh:mm a',
+              'ar',
+            ).format(DateTime.parse(m['createdAt']));
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      "📝 ${m['title']}",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete,
-                            color: Colors.red),
-                        onPressed: () async {
-                          m['text'] = "";
-                          _updateMemory();
-                          Navigator.pop(context);
-                        },
-                      )
-                    ],
-                  ),
-                if (m['audio'] != null) ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () async {
-                            await audioPlayer
-                                .setFilePath(m['audio']);
-                            audioPlayer.play();
-                          },
-                          icon:
-                          const Icon(Icons.play_arrow),
-                          label:
-                          const Text("🎙️ تشغيل الصوت"),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete,
-                            color: Colors.red),
-                        onPressed: () async {
-                          m['audio'] = null;
-                          _updateMemory();
-                          Navigator.pop(context);
-                        },
-                      )
-                    ],
-                  ),
-                ],
-                if (m['video'] != null &&
-                    detailsVideoController != null) ...[
-                  const SizedBox(height: 12),
-                  AspectRatio(
-                    aspectRatio: detailsVideoController
-                        .value.aspectRatio,
-                    child:
-                    VideoPlayer(detailsVideoController),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      icon: const Icon(Icons.delete,
-                          color: Colors.red),
-                      onPressed: () async {
-                        m['video'] = null;
-                        _updateMemory();
-                        Navigator.pop(context);
-                      },
                     ),
-                  )
-                ],
+                    const SizedBox(height: 4),
+                    Text("📅 $date"),
+                    const Divider(),
+
+                    /// ✍️ TEXT
+                    if (m['text'] != null && m['text'].toString().isNotEmpty)
+                      Text("✍️ ${m['text']}", textAlign: TextAlign.right),
+
+                    /// 🎙️ AUDIO
+                    if (m['audio'] != null) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                final file = File(m['audio']);
+
+                                // تأكد إن الملف موجود
+                                if (!file.existsSync()) {
+                                  _snack("ملف الصوت غير موجود");
+                                  return;
+                                }
+
+                                // أوقف أي صوت شغال
+                                await audioPlayer.stop();
+
+                                // شغّل الصوت
+                                await audioPlayer.setFilePath(file.path);
+                                audioPlayer.play();
+                              },
+                              icon: const Icon(Icons.play_arrow),
+                              label: const Text("🎙️ تشغيل الصوت"),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              final confirm = await DeleteConfirmDialog.show(
+                                context: context,
+                                title: 'حذف التسجيل الصوتي',
+                                message: 'هل أنت متأكد من حذف التسجيل الصوتي؟\nلا يمكن التراجع عن هذا الإجراء.',
+                                confirmText: 'حذف',
+                                cancelText: 'إلغاء',
+                              );
+
+                              if (confirm == true) {
+                                // إيقاف أي صوت شغال
+                                await audioPlayer.stop();
+
+                                m['audio'] = null;
+                                await _updateMemory();
+                                Navigator.pop(context);
+                              }
+                            },
+                          ),
+
+                        ],
+                      ),
+                    ],
+
+                    /// 🎬 VIDEO
+                    if (controller != null &&
+                        controller!.value.isInitialized) ...[
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            controller!.value.isPlaying
+                                ? controller!.pause()
+                                : controller!.play();
+                          });
+                        },
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            AspectRatio(
+                              aspectRatio: controller!.value.aspectRatio,
+                              child: VideoPlayer(controller!),
+                            ),
+                            if (!controller!.value.isPlaying)
+                              const Icon(
+                                Icons.play_circle_fill,
+                                size: 64,
+                                color: Colors.white,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    controller?.dispose();
+                    Navigator.pop(context);
+                  },
+                  child: const Text("إغلاق"),
+                ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("إغلاق"),
-            )
-          ],
+            );
+          },
         );
       },
     );
@@ -337,8 +387,7 @@ class _MemoryPageState extends State<MemoryPage> {
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -351,9 +400,7 @@ class _MemoryPageState extends State<MemoryPage> {
         centerTitle: true,
         title: const Text(
           "💗 ذِكرى لا أنساها",
-          style: TextStyle(
-              color: purplePink,
-              fontWeight: FontWeight.bold),
+          style: TextStyle(color: purplePink, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -362,19 +409,12 @@ class _MemoryPageState extends State<MemoryPage> {
           children: [
             _field(titleController, "📝 عنوان الذكرى"),
             const SizedBox(height: 12),
-            _field(
-              textController,
-              "✨ دوّن ما لا يُنسى…",
-              maxLines: 4,
-            ),
+            _field(textController, "✨ دوّن ما لا يُنسى…", maxLines: 4),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: _toggleRecord,
-              icon:
-              Icon(isRecording ? Icons.stop : Icons.mic),
-              label: Text(isRecording
-                  ? "إيقاف التسجيل"
-                  : "🎙️ تسجيل صوتي"),
+              icon: Icon(isRecording ? Icons.stop : Icons.mic),
+              label: Text(isRecording ? "إيقاف التسجيل" : "🎙️ تسجيل صوتي"),
             ),
             ElevatedButton.icon(
               onPressed: _pickVideo,
@@ -383,16 +423,13 @@ class _MemoryPageState extends State<MemoryPage> {
             ),
             if (previewController != null)
               AspectRatio(
-                aspectRatio:
-                previewController!.value.aspectRatio,
-                child:
-                VideoPlayer(previewController!),
+                aspectRatio: previewController!.value.aspectRatio,
+                child: VideoPlayer(previewController!),
               ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _saveMemory,
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: roseGold),
+              style: ElevatedButton.styleFrom(backgroundColor: roseGold),
               child: const Text("💾 حفظ الذكرى"),
             ),
             OutlinedButton.icon(
@@ -406,8 +443,7 @@ class _MemoryPageState extends State<MemoryPage> {
     );
   }
 
-  Widget _field(TextEditingController c, String hint,
-      {int maxLines = 1}) {
+  Widget _field(TextEditingController c, String hint, {int maxLines = 1}) {
     return TextField(
       controller: c,
       maxLines: maxLines,
@@ -416,9 +452,7 @@ class _MemoryPageState extends State<MemoryPage> {
         hintText: hint,
         filled: true,
         fillColor: warmBeige,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }

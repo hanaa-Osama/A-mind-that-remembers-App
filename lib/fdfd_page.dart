@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'lib/widgets/delete_alert_dialog.dart';
+
 class FadfadlyPage extends StatefulWidget {
   const FadfadlyPage({super.key});
 
@@ -449,141 +451,192 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: powderPink,
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: const Text("🗣️ فضفضلي"),
-        centerTitle: true,
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
         backgroundColor: powderPink,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          18,
-          18,
-          18,
-          MediaQuery.of(context).viewInsets.bottom + 20,
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          title: const Text("🗣️ فضفضلي"),
+          centerTitle: true,
+          backgroundColor: powderPink,
+          elevation: 0,
+          automaticallyImplyLeading: false,
         ),
-        child: Column(
-          children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: roseGold),
-              onPressed: () async {
-                if (!showHistory) await loadHistory();
-                setState(() => showHistory = !showHistory);
-              },
-              child: Text(showHistory ? "إخفاء السجل" : "📁 سجل التدوينات"),
-            ),
-            const SizedBox(height: 20),
-            if (!showHistory) ...[
-              const Text(
-                "كيف تشعر اليوم؟",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: purplePink,
+        body: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            18,
+            18,
+            18,
+            MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: roseGold),
+                onPressed: () async {
+                  if (!showHistory) await loadHistory();
+                  setState(() => showHistory = !showHistory);
+                },
+                child: Text(showHistory ? "إخفاء السجل" : "📁 سجل التدوينات"),
+              ),
+              const SizedBox(height: 20),
+              if (!showHistory) ...[
+                const Text(
+                  "كيف تشعر اليوم؟",
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: purplePink,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: moodEmojis.keys.map((mood) {
-                  final selected = selectedMood == mood;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedMood = mood;
-                        selectedQuestion = pickQuestion(mood);
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: selected ? roseGold : warmBeige,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: roseGold, width: 2),
-                      ),
-                      child: Text(
-                        "${moodEmojis[mood]}  $mood",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: selected ? Colors.white : Colors.black,
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: moodEmojis.keys.map((mood) {
+                    final selected = selectedMood == mood;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedMood = mood;
+                          selectedQuestion = pickQuestion(mood);
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selected ? roseGold : warmBeige,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: roseGold, width: 2),
+                        ),
+                        child: Text(
+                          "${moodEmojis[mood]}  $mood",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: selected ? Colors.white : Colors.black,
+                          ),
                         ),
                       ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                if (selectedQuestion != null)
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: warmBeige,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: roseGold, width: 2),
                     ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-              if (selectedQuestion != null)
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: warmBeige,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: roseGold, width: 2),
+                    child: Column(
+                      children: [
+                        Text(
+                          selectedQuestion!,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: answerController,
+                          maxLines: 3,
+                          decoration: const InputDecoration(
+                            hintText: "إجابتك على السؤال",
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: journalController,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            hintText: "مساحة هدوء",
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: roseGold),
+                          onPressed: saveEntry,
+                          child: const Text("حفظ"),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      Text(
-                        selectedQuestion!,
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: answerController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                          hintText: "إجابتك على السؤال",
+              ],
+              if (showHistory)
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: savedEntries.length,
+                  itemBuilder: (context, index) {
+                    final e = savedEntries[index];
+                    return Card(
+                      color: warmBeige,
+                      child: ListTile(
+                        onTap: () => showEntryDetails(e),
+                        title: Text("${e['emoji']} ${e['mood']}"),
+                        subtitle: Text(e['date']),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            final confirm = await DeleteConfirmDialog.show(
+                              context: context,
+                              title: 'هل أنت متأكد من الحذف؟',
+                              message: 'سيتم حذف هذا العنصر نهائيًا',
+                            );
+
+                            if (confirm == true) {
+                              deleteEntry(index);
+                            }
+                          },
+
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: journalController,
-                        maxLines: 4,
-                        decoration: const InputDecoration(
-                          hintText: "مساحة هدوء",
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: roseGold),
-                        onPressed: saveEntry,
-                        child: const Text("حفظ"),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
             ],
-            if (showHistory)
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: savedEntries.length,
-                itemBuilder: (context, index) {
-                  final e = savedEntries[index];
-                  return Card(
-                    color: warmBeige,
-                    child: ListTile(
-                      onTap: () => showEntryDetails(e),
-                      title: Text("${e['emoji']} ${e['mood']}"),
-                      subtitle: Text(e['date']),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => deleteEntry(index),
-                      ),
-                    ),
-                  );
-                },
-              ),
-          ],
+          ),
         ),
       ),
     );
   }
+  Future<bool?> showDeleteConfirmDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'تأكيد الحذف',
+            textAlign: TextAlign.right,
+          ),
+          content: const Text(
+            'هل أنت متأكد من الحذف؟',
+            textAlign: TextAlign.right,
+          ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('إلغاء'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('حذف'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }
