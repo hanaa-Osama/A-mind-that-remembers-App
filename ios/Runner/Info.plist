@@ -4,6 +4,27 @@
 <dict>
 <key>NSFaceIDUsageDescription</key>
 <string>نستخدم Face ID لحماية مذكراتك الشخصية</string>
+
+<!-- Microphone -->
+<key>NSMicrophoneUsageDescription</key>
+<string>We need microphone access to record your voice memories</string>
+
+<!-- Camera -->
+<key>NSCameraUsageDescription</key>
+<string>We need camera access to capture moments</string>
+
+<!-- Photo Library -->
+<key>NSPhotoLibraryUsageDescription</key>
+<string>We need access to your photos to attach memories</string>
+
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>We need permission to save images to your photo library</string>
+
+<!-- Notifications -->
+<key>NSUserNotificationUsageDescription</key>
+<string>We send reminders to help you record your daily memories</string>
+
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
