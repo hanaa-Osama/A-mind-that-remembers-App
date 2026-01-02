@@ -51,17 +51,17 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.chat_bubble_outline),
             activeIcon: Icon(Icons.chat_bubble),
-            label: "فَضفضلي",
+            label: "كلام من القلب",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bookmark_added_outlined),
             activeIcon: Icon(Icons.bookmark),
-            label: "ذِكرى لا أنساها",
+            label: "ذكرى اليوم",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.self_improvement_outlined),
             activeIcon: Icon(Icons.self_improvement),
-            label: "جلسة مع نفسي",
+            label: "جلسة هادئة",
           ),
         ],
       ),

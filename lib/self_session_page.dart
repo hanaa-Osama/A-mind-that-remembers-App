@@ -143,14 +143,13 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
         ).format(DateTime.parse(session['createdAt']));
         return AlertDialog(
           backgroundColor: warmBeige,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Text(
             "🧘 تفاصيل الجلسة",
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: purplePink,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: purplePink, fontWeight: FontWeight.bold),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -160,7 +159,7 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                 const SizedBox(height: 12),
                 ...sections.entries.map((section) {
                   final items = section.value.where(
-                        (q) => answers.containsKey("${section.key}::$q"),
+                    (q) => answers.containsKey("${section.key}::$q"),
                   );
                   if (items.isEmpty) return const SizedBox.shrink();
                   return Container(
@@ -183,7 +182,7 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                         ),
                         const SizedBox(height: 8),
                         ...items.map(
-                              (q) => Padding(
+                          (q) => Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -191,13 +190,13 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                                 Text(
                                   q,
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.w600),
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   answers["${section.key}::$q"]!,
-                                  style:
-                                  const TextStyle(color: Colors.grey),
+                                  style: const TextStyle(color: Colors.grey),
                                 ),
                               ],
                             ),
@@ -236,15 +235,13 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: powderPink,
-      appBar: AppBar(
-        title: const Text("🌿 جلسة مع نفسي"),
-      ),
+      appBar: AppBar(title: const Text("🌿 جلسة مع نفسي")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             ...sections.entries.map(
-                  (section) => Column(
+              (section) => Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
@@ -257,15 +254,13 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                   ),
                   const SizedBox(height: 8),
                   ...section.value.map(
-                        (q) => Padding(
+                    (q) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: TextField(
-                        controller:
-                        controllers["${section.key}::$q"],
+                        controller: controllers["${section.key}::$q"],
                         maxLines: 3,
                         textAlign: TextAlign.right,
-                        decoration:
-                        InputDecoration(hintText: q),
+                        decoration: InputDecoration(hintText: q),
                       ),
                     ),
                   ),
@@ -282,42 +277,57 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
               icon: const Icon(Icons.folder_open),
               label: const Text("📚 سجل الجلسات"),
               onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  backgroundColor: warmBeige,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  builder: (_) {
-                    return StatefulBuilder(
-                      builder: (context, modalSetState) {
-                        return ListView.builder(
-                          itemCount: sessions.length,
-                          itemBuilder: (_, i) {
-                            final s = sessions[i];
-                            final date = DateFormat(
-                              'd MMM yyyy – hh:mm a',
-                              'ar',
-                            ).format(
-                                DateTime.parse(s['createdAt']));
-                            return Card(
-                              child: ListTile(
-                                title:
-                                const Text("🧘 جلسة تأمل"),
-                                subtitle: Text(date),
-                                onTap: () =>
-                                    _openSessionDetails(s),
+                if (sessions.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "لا توجد جلسات حتى الآن، ابدأ جلسة جديدة 🌱",
+                        style: TextStyle(fontFamily: 'Tajawal'),
+                      ),
+                      backgroundColor: Colors.orangeAccent,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } else {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: warmBeige,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                    ),
+                    builder: (_) {
+                      return StatefulBuilder(
+                        builder: (context, modalSetState) {
+                          return ListView.builder(
+                            itemCount: sessions.length,
+                            itemBuilder: (_, i) {
+                              final s = sessions[i];
+                              final date = DateFormat(
+                                'd MMM yyyy – hh:mm a',
+                                'ar',
+                              ).format(DateTime.parse(s['createdAt']));
+                              return Card(
+                                child: ListTile(
+                                  title: const Text("🧘 جلسة تأمل"),
+                                  subtitle: Text(date),
+                                  onTap: () => _openSessionDetails(s),
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
                                     onPressed: () async {
-                                      final confirm = await DeleteConfirmDialog.show(
-                                        context: context,
-                                        title: 'حذف الجلسة',
-                                        message: 'هل أنت متأكد من حذف هذه الجلسة؟\nلا يمكن التراجع عن هذا الإجراء.',
-                                        confirmText: 'حذف',
-                                        cancelText: 'إلغاء',
-                                      );
+                                      final confirm =
+                                          await DeleteConfirmDialog.show(
+                                            context: context,
+                                            title: 'حذف الجلسة',
+                                            message:
+                                                'هل أنت متأكد من حذف هذه الجلسة؟\nلا يمكن التراجع عن هذا الإجراء.',
+                                            confirmText: 'حذف',
+                                            cancelText: 'إلغاء',
+                                          );
 
                                       if (confirm == true) {
                                         await _deleteSession(s['id']);
@@ -326,15 +336,15 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                                       }
                                     },
                                   ),
-
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
-                );
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  );
+                }
               },
             ),
           ],

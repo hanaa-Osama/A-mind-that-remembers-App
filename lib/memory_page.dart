@@ -202,7 +202,8 @@ class _MemoryPageState extends State<MemoryPage> {
                           final confirm = await DeleteConfirmDialog.show(
                             context: context,
                             title: 'حذف الذكرى',
-                            message: 'هل أنت متأكد من حذف هذه الذكرى؟\nلا يمكن التراجع عن هذا الإجراء.',
+                            message:
+                                'هل أنت متأكد من حذف هذه الذكرى؟\nلا يمكن التراجع عن هذا الإجراء.',
                             confirmText: 'حذف',
                             cancelText: 'إلغاء',
                           );
@@ -213,14 +214,15 @@ class _MemoryPageState extends State<MemoryPage> {
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.setStringList(
                               'memories',
-                              memories.reversed.map((e) => jsonEncode(e)).toList(),
+                              memories.reversed
+                                  .map((e) => jsonEncode(e))
+                                  .toList(),
                             );
 
                             setModalState(() {});
                           }
                         },
                       ),
-
                     ),
                   );
                 },
@@ -309,7 +311,8 @@ class _MemoryPageState extends State<MemoryPage> {
                               final confirm = await DeleteConfirmDialog.show(
                                 context: context,
                                 title: 'حذف التسجيل الصوتي',
-                                message: 'هل أنت متأكد من حذف التسجيل الصوتي؟\nلا يمكن التراجع عن هذا الإجراء.',
+                                message:
+                                    'هل أنت متأكد من حذف التسجيل الصوتي؟\nلا يمكن التراجع عن هذا الإجراء.',
                                 confirmText: 'حذف',
                                 cancelText: 'إلغاء',
                               );
@@ -324,7 +327,6 @@ class _MemoryPageState extends State<MemoryPage> {
                               }
                             },
                           ),
-
                         ],
                       ),
                     ],
@@ -407,9 +409,14 @@ class _MemoryPageState extends State<MemoryPage> {
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
-            _field(titleController, "📝 عنوان الذكرى"),
+            _field(titleController, "📝 * عنوان الذكرى"),
+
             const SizedBox(height: 12),
-            _field(textController, "✨ دوّن ما لا يُنسى…", maxLines: 4),
+            _field(
+              textController,
+              "✨ اكتب تفاصيل ذكراك هنا.......",
+              maxLines: 4,
+            ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: _toggleRecord,
@@ -432,10 +439,30 @@ class _MemoryPageState extends State<MemoryPage> {
               style: ElevatedButton.styleFrom(backgroundColor: roseGold),
               child: const Text("💾 حفظ الذكرى"),
             ),
+            const SizedBox(height: 16),
             OutlinedButton.icon(
-              onPressed: _openHistory,
-              icon: const Icon(Icons.folder_open),
-              label: const Text("📚 سجل الذكريات"),
+              onPressed: () {
+                if (memories.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "لا يوجد أي ذكريات حتى الآن، أضف الآن",
+                        style: TextStyle(fontFamily: 'Tajawal'),
+                      ),
+                      backgroundColor: Colors.orangeAccent,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } else {
+                  _openHistory();
+                }
+              },
+
+              icon: const Icon(Icons.arrow_back_ios_new),
+              label: const Text(
+                style: TextStyle(fontSize: 22),
+                "📚 سجل الذكريات",
+              ),
             ),
           ],
         ),

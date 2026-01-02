@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home_page.dart';
-import 'lib/widgets/services/local_auth_service.dart';
+import 'lib/services/local_auth_service.dart';
+
 import 'pin_page.dart';
 import 'register_page.dart';
 
@@ -40,7 +41,7 @@ class _SplashPageState extends State<SplashPage> {
     }
 
     // 👇  PIN flow if user cancel biometric
-    await _checkUser();
+    // await _checkUser();
   }
 
   static const Color powderPink = Color(0xFFF4C2C2);
@@ -67,24 +68,24 @@ class _SplashPageState extends State<SplashPage> {
     }
   }
 
-  Future<void> _navigateSignedUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? savedPin = prefs.getString('userPin');
-
-    if (!mounted) return;
-
-    if (savedPin == null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const RegisterPage()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
-    }
-  }
+  // Future<void> _navigateSignedUser() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final String? savedPin = prefs.getString('userPin');
+  //
+  //   if (!mounted) return;
+  //
+  //   if (savedPin == null) {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (_) => const RegisterPage()),
+  //     );
+  //   } else {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (_) => const HomePage()),
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +143,10 @@ class _SplashPageState extends State<SplashPage> {
             SizedBox(height: 22),
             ElevatedButton(
               onPressed: () {
-                _navigateSignedUser();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFB76E79), // roseGold

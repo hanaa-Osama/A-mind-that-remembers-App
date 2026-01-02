@@ -369,16 +369,15 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
         selectedQuestion == null ||
         answerController.text.trim().isEmpty ||
         journalController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("من فضلك أكمل جميع الحقول")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("من فضلك أكمل جميع الحقول")));
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
-    final dateStr =
-    DateFormat('EEEE d MMMM yyyy – hh:mm a', 'ar').format(now);
+    final dateStr = DateFormat('EEEE d MMMM yyyy – hh:mm a', 'ar').format(now);
 
     final entry = {
       'date': dateStr,
@@ -401,9 +400,9 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
       selectedQuestion = null;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("تم حفظ تدوينك بنجاح ❤️")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("تم حفظ تدوينك بنجاح ❤️")));
   }
 
   Future<void> deleteEntry(int index) async {
@@ -505,7 +504,9 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: selected ? roseGold : warmBeige,
                           borderRadius: BorderRadius.circular(14),
@@ -536,7 +537,9 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                         Text(
                           selectedQuestion!,
                           style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -557,7 +560,8 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                         const SizedBox(height: 14),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: roseGold),
+                            backgroundColor: roseGold,
+                          ),
                           onPressed: saveEntry,
                           child: const Text("حفظ"),
                         ),
@@ -565,44 +569,81 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                     ),
                   ),
               ],
-              if (showHistory)
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: savedEntries.length,
-                  itemBuilder: (context, index) {
-                    final e = savedEntries[index];
-                    return Card(
-                      color: warmBeige,
-                      child: ListTile(
-                        onTap: () => showEntryDetails(e),
-                        title: Text("${e['emoji']} ${e['mood']}"),
-                        subtitle: Text(e['date']),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            final confirm = await DeleteConfirmDialog.show(
-                              context: context,
-                              title: 'هل أنت متأكد من الحذف؟',
-                              message: 'سيتم حذف هذا العنصر نهائيًا',
-                            );
-
-                            if (confirm == true) {
-                              deleteEntry(index);
-                            }
-                          },
-
+              if (showHistory) ...[
+                if (savedEntries.isEmpty)
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: warmBeige.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: Colors.brown.withOpacity(0.1),
                         ),
                       ),
-                    );
-                  },
-                ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(
+                            Icons.history_rounded,
+                            size: 42,
+                            color: Colors.brown,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            "لا توجد عناصر محفوظة بعد",
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.brown,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: savedEntries.length,
+                    itemBuilder: (context, index) {
+                      final e = savedEntries[index];
+                      return Card(
+                        color: warmBeige,
+                        child: ListTile(
+                          onTap: () => showEntryDetails(e),
+                          title: Text("${e['emoji']} ${e['mood']}"),
+                          subtitle: Text(e['date']),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              final confirm = await DeleteConfirmDialog.show(
+                                context: context,
+                                title: 'هل أنت متأكد من الحذف؟',
+                                message: 'سيتم حذف هذا العنصر نهائيًا',
+                              );
+
+                              if (confirm == true) {
+                                deleteEntry(index);
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
             ],
           ),
         ),
       ),
     );
   }
+
   Future<bool?> showDeleteConfirmDialog(BuildContext context) {
     return showDialog<bool>(
       context: context,
@@ -612,10 +653,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
-            'تأكيد الحذف',
-            textAlign: TextAlign.right,
-          ),
+          title: const Text('تأكيد الحذف', textAlign: TextAlign.right),
           content: const Text(
             'هل أنت متأكد من الحذف؟',
             textAlign: TextAlign.right,
@@ -628,9 +666,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('حذف'),
             ),
           ],
@@ -638,5 +674,4 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
       },
     );
   }
-
 }
