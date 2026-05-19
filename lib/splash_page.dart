@@ -119,12 +119,13 @@ class _SplashPageState extends State<SplashPage> {
                 // App Name
                 Text(
                   S.of(context, 'my_memories'),
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: 'Tajawal',
-                    fontSize: 42,
+                    fontSize: 32,
                     fontWeight: FontWeight.w300,
                     color: softWhiteGray,
-                    letterSpacing: 8,
+                    letterSpacing: 4,
                   ),
                 ),
                 
