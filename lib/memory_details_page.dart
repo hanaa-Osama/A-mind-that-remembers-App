@@ -1,3 +1,4 @@
+import 'package:lahzet_zikry/translations.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -67,7 +68,7 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              "📅 التاريخ: ${widget.data["date"]}",
+              "📅 ${S.of(context, 'date')}: ${widget.data["date"]}",
               style: const TextStyle(
                 fontFamily: 'Tajawal',
                 fontSize: 18,
@@ -76,9 +77,9 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
               textAlign: TextAlign.right,
             ),
             const SizedBox(height: 20),
-            const Text(
-              "📝 الذكرى:",
-              style: TextStyle(
+            Text(
+              "📝 ${S.of(context, 'the_memory')}:",
+              style: const TextStyle(
                 fontFamily: 'Tajawal',
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -133,8 +134,8 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
                     ),
                     child: Text(
                       vid!.value.isPlaying
-                          ? "إيقاف الفيديو"
-                          : "تشغيل الفيديو",
+                          ? S.of(context, 'pause_video')
+                          : S.of(context, 'play_video'),
                       style: const TextStyle(
                         fontFamily: 'Tajawal',
                         color: Colors.white,
@@ -148,9 +149,9 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   const SizedBox(height: 20),
-                  const Text(
-                    "🎤 تسجيل صوتي مرفق",
-                    style: TextStyle(
+                  Text(
+                    "🎤 ${S.of(context, 'audio_attached')}",
+                    style: const TextStyle(
                       fontFamily: 'Tajawal',
                       fontSize: 18,
                       color: purplePink,
@@ -167,9 +168,9 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: roseGold,
                     ),
-                    child: const Text(
-                      "تشغيل الصوت",
-                      style: TextStyle(
+                    child: Text(
+                      S.of(context, 'play_audio'),
+                      style: const TextStyle(
                         fontFamily: 'Tajawal',
                         color: Colors.white,
                       ),

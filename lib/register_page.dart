@@ -1,3 +1,4 @@
+import 'package:lahzet_zikry/translations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,9 +15,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController pinController = TextEditingController();
 
-  final List<String> selectedQuestions = const [
-    "ما هو فريقك المفضل؟",
-    "ما هو المكان الذي تشعر فيه بالراحة دائمًا؟",
+  List<String> getSelectedQuestions(BuildContext context) => [
+    S.of(context, 'question_team'),
+    S.of(context, 'question_place'),
   ];
 
   final List<TextEditingController> answerControllers =
@@ -35,10 +36,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (name.isEmpty || !validPin) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "❗ الرجاء إدخال الاسم و PIN مكوّن من 4 أرقام فقط",
-            style: TextStyle(fontFamily: 'Tajawal'),
+            S.of(context, 'name_pin_required'),
+            style: const TextStyle(fontFamily: 'Tajawal'),
           ),
           backgroundColor: Colors.redAccent,
         ),
@@ -51,7 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              "❗ يجب الإجابة على السؤال رقم ${i + 1}",
+              "${S.of(context, 'answer_question_prefix')}${i + 1}",
               style: const TextStyle(fontFamily: 'Tajawal'),
             ),
             backgroundColor: Colors.redAccent,
@@ -66,8 +67,9 @@ class _RegisterPageState extends State<RegisterPage> {
     await prefs.setString("userName", name);
     await prefs.setString("userPin", pin);
 
+    final questions = getSelectedQuestions(context);
     for (int i = 0; i < 2; i++) {
-      await prefs.setString("q$i", selectedQuestions[i]);
+      await prefs.setString("q$i", questions[i]);
       await prefs.setString("a$i", answerControllers[i].text.trim());
     }
 
@@ -82,15 +84,16 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Localizations.localeOf(context).languageCode == 'ar';
     return Scaffold(
       backgroundColor: powderPink,
       appBar: AppBar(
         backgroundColor: powderPink,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          "تسجيل مستخدم جديد",
-          style: TextStyle(
+        title: Text(
+          S.of(context, 'register_new_user'),
+          style: const TextStyle(
             fontFamily: 'Tajawal',
             color: purplePink,
             fontWeight: FontWeight.bold,
@@ -100,12 +103,12 @@ class _RegisterPageState extends State<RegisterPage> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(25),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: isRtl ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            _title("أدخل اسمك"),
-            _field(nameController),
+            _title(S.of(context, 'enter_name'), isRtl),
+            _field(nameController, isRtl),
             const SizedBox(height: 25),
-            _title("أدخل رمز PIN (٤ أرقام)"),
+            _title(S.of(context, 'enter_pin_4_digits'), isRtl),
             TextField(
               controller: pinController,
               maxLength: 4,
@@ -124,20 +127,20 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
             const SizedBox(height: 25),
-            _title("أسئلة الأمان:"),
+            _title(S.of(context, 'security_questions_title'), isRtl),
             const SizedBox(height: 10),
             for (int i = 0; i < 2; i++) ...[
               Text(
-                selectedQuestions[i],
+                getSelectedQuestions(context)[i],
                 style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 16,
                   color: Colors.black87,
                 ),
-                textDirection: TextDirection.rtl,
+                textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
               ),
               const SizedBox(height: 8),
-              _field(answerControllers[i]),
+              _field(answerControllers[i], isRtl),
               const SizedBox(height: 20),
             ],
             const SizedBox(height: 10),
@@ -152,9 +155,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  "حفظ",
-                  style: TextStyle(
+                child: Text(
+                  S.of(context, 'save'),
+                  style: const TextStyle(
                     fontFamily: 'Tajawal',
                     fontSize: 20,
                     color: Colors.white,
@@ -168,7 +171,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _title(String text) {
+  Widget _title(String text, bool isRtl) {
     return Text(
       text,
       style: const TextStyle(
@@ -177,14 +180,14 @@ class _RegisterPageState extends State<RegisterPage> {
         fontWeight: FontWeight.bold,
         color: purplePink,
       ),
-      textDirection: TextDirection.rtl,
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
     );
   }
 
-  Widget _field(TextEditingController controller) {
+  Widget _field(TextEditingController controller, bool isRtl) {
     return TextField(
       controller: controller,
-      textDirection: TextDirection.rtl,
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       style: const TextStyle(fontFamily: 'Tajawal'),
       decoration: _inputDecoration(),
     );

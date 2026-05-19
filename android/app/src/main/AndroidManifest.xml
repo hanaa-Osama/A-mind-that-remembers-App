@@ -17,7 +17,7 @@
         android:name="android.hardware.fingerprint"
         android:required="false" />
     <application
-        android:label="لحظة ذكرى"
+        android:label="Memories"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true">

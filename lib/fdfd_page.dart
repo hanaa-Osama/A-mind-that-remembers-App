@@ -1,3 +1,4 @@
+import 'package:lahzet_zikry/translations.dart';
 import 'dart:convert';
 import 'dart:math';
 
@@ -30,16 +31,16 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
   static const Color purplePink = Color(0xFFC48BCB);
 
   final Map<String, String> moodEmojis = {
-    "سعيد": "😄",
-    "عادي": "🙂",
-    "حزين": "😢",
-    "متوتر": "😰",
-    "متحمّس": "🤩",
-    "مرهق": "😫",
+    "mood_happy": "😄",
+    "mood_neutral": "🙂",
+    "mood_sad": "😢",
+    "mood_anxious": "😰",
+    "mood_excited": "🤩",
+    "mood_exhausted": "😫",
   };
 
   final Map<String, List<String>> moodQuestions = {
-    "سعيد": [
+    "mood_happy": [
       "ما أكثر شيء جعلك تبتسم اليوم؟",
       "ما لحظة صغيرة أسعدتك بدون توقع؟",
       "من الشخص الذي أشعرك بالراحة اليوم؟",
@@ -90,7 +91,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
       "ما شعور يجعلك مرتاحًا؟",
       "ما أمنية بسيطة تحققت؟",
     ],
-    "عادي": [
+    "mood_neutral": [
       "كيف كان يومك بشكل عام؟",
       "ما أكثر شيء شغل تفكيرك؟",
       "ما نشاط قمت به بشكل روتيني؟",
@@ -142,7 +143,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
       "ما شيء تحب وجوده في يومك؟",
       "ما شيء لا تحب تكراره؟",
     ],
-    "حزين": [
+    "mood_sad": [
       "ما الذي أثقل قلبك اليوم؟",
       "ما موقف جعلك تشعر بالحزن؟",
       "ما شيء افتقدته؟",
@@ -193,7 +194,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
       "ما إحساس يحتاج وقتًا؟",
       "ما شيء تحب مشاركته؟",
     ],
-    "متوتر": [
+    "mood_anxious": [
       "ما أكثر شيء يسبب لك التوتر الآن؟",
       "ما فكرة تثير القلق داخلك؟",
       "ما أمر خارج عن سيطرتك؟",
@@ -244,7 +245,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
       "ما أمر لا يستحق كل القلق؟",
       "ما شعور تحتاج تهدئته؟",
     ],
-    "متحمّس": [
+    "mood_excited": [
       "ما الذي يشعل حماسك الآن؟",
       "ما هدف قريب يشجعك؟",
       "ما خطوة تنتظرها بشغف؟",
@@ -294,7 +295,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
       "ما نتيجة تنتظرها بشغف؟",
       "ما نية تحب وضعها لليوم؟",
     ],
-    "مرهق": [
+    "mood_exhausted": [
       "ما أكثر شيء استنزف طاقتك اليوم؟",
       "هل الإرهاق ذهني أم جسدي؟",
       "ما موقف جعلك تشعر بالتعب؟",
@@ -371,13 +372,14 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
         journalController.text.trim().isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("من فضلك أكمل جميع الحقول")));
+      ).showSnackBar(SnackBar(content: Text(S.of(context, 'fill_all_fields'))));
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
-    final dateStr = DateFormat('EEEE d MMMM yyyy – hh:mm a', 'ar').format(now);
+    final locale = Localizations.localeOf(context).languageCode;
+    final dateStr = DateFormat('EEEE d MMMM yyyy – hh:mm a', locale).format(now);
 
     final entry = {
       'date': dateStr,
@@ -402,7 +404,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text("تم حفظ تدوينك بنجاح ❤️")));
+    ).showSnackBar(SnackBar(content: Text(S.of(context, 'entry_saved_success'))));
   }
 
   Future<void> deleteEntry(int index) async {
@@ -420,7 +422,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
       builder: (_) => AlertDialog(
         backgroundColor: warmBeige,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text("${e['emoji']} ${e['mood']}"),
+        title: Text("${e['emoji']} ${S.of(context, e['mood'])}"),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,16 +434,16 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              Text("✍️ إجابتك:\n${e['answer']}"),
+              Text("✍️ ${S.of(context, 'your_answer')}:\n${e['answer']}"),
               const SizedBox(height: 10),
-              Text("📓 التدوين الشخصي:\n${e['journal']}"),
+              Text("📓 ${S.of(context, 'personal_journal')}:\n${e['journal']}"),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("إغلاق"),
+            child: Text(S.of(context, 'close')),
           ),
         ],
       ),
@@ -456,7 +458,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
         backgroundColor: powderPink,
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: const Text("🗣️ فضفضلي"),
+          title: Text("🗣️ ${S.of(context, 'fadfadly')}"),
           centerTitle: true,
           backgroundColor: powderPink,
           elevation: 0,
@@ -477,13 +479,13 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                   if (!showHistory) await loadHistory();
                   setState(() => showHistory = !showHistory);
                 },
-                child: Text(showHistory ? "إخفاء السجل" : "📁 سجل التدوينات"),
+                child: Text(showHistory ? S.of(context, 'hide_history') : S.of(context, 'show_history')),
               ),
               const SizedBox(height: 20),
               if (!showHistory) ...[
-                const Text(
-                  "كيف تشعر اليوم؟",
-                  style: TextStyle(
+                Text(
+                  S.of(context, 'how_feel_today'),
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: purplePink,
@@ -513,7 +515,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                           border: Border.all(color: roseGold, width: 2),
                         ),
                         child: Text(
-                          "${moodEmojis[mood]}  $mood",
+                          "${moodEmojis[mood]}  ${S.of(context, mood)}",
                           style: TextStyle(
                             fontSize: 18,
                             color: selected ? Colors.white : Colors.black,
@@ -545,16 +547,16 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                         TextField(
                           controller: answerController,
                           maxLines: 3,
-                          decoration: const InputDecoration(
-                            hintText: "إجابتك على السؤال",
+                          decoration: InputDecoration(
+                            hintText: S.of(context, 'answer_question_hint'),
                           ),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: journalController,
                           maxLines: 4,
-                          decoration: const InputDecoration(
-                            hintText: "مساحة هدوء",
+                          decoration: InputDecoration(
+                            hintText: S.of(context, 'quiet_space_hint'),
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -563,7 +565,7 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                             backgroundColor: roseGold,
                           ),
                           onPressed: saveEntry,
-                          child: const Text("حفظ"),
+                          child: Text(S.of(context, 'save')),
                         ),
                       ],
                     ),
@@ -584,16 +586,16 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(
+                        children: [
+                          const Icon(
                             Icons.history_rounded,
                             size: 42,
                             color: Colors.brown,
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           Text(
-                            "لا توجد عناصر محفوظة بعد",
-                            style: TextStyle(
+                            S.of(context, 'no_items_saved'),
+                            style: const TextStyle(
                               fontFamily: 'Tajawal',
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -616,15 +618,15 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
                         color: warmBeige,
                         child: ListTile(
                           onTap: () => showEntryDetails(e),
-                          title: Text("${e['emoji']} ${e['mood']}"),
+                          title: Text("${e['emoji']} ${S.of(context, e['mood'])}"),
                           subtitle: Text(e['date']),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () async {
                               final confirm = await DeleteConfirmDialog.show(
                                 context: context,
-                                title: 'هل أنت متأكد من الحذف؟',
-                                message: 'سيتم حذف هذا العنصر نهائيًا',
+                                title: S.of(context, 'confirm_delete_title'),
+                                message: S.of(context, 'confirm_delete_permanent'),
                               );
 
                               if (confirm == true) {
@@ -653,21 +655,21 @@ class _FadfadlyPageState extends State<FadfadlyPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text('تأكيد الحذف', textAlign: TextAlign.right),
-          content: const Text(
-            'هل أنت متأكد من الحذف؟',
+          title: Text(S.of(context, 'confirm_delete_title'), textAlign: TextAlign.right),
+          content: Text(
+            S.of(context, 'confirm_delete'),
             textAlign: TextAlign.right,
           ),
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('إلغاء'),
+              child: Text(S.of(context, 'cancel')),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('حذف'),
+              child: Text(S.of(context, 'delete')),
             ),
           ],
         );

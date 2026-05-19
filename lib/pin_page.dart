@@ -1,3 +1,4 @@
+import 'package:lahzet_zikry/translations.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
@@ -37,10 +38,10 @@ class _PinPageState extends State<PinPage> {
 
     if (enteredPin.length != 4) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "الرجاء إدخال رمز سري مكوّن من 4 أرقام",
-            style: TextStyle(fontFamily: 'Tajawal'),
+            S.of(context, 'pin_4_digits'),
+            style: const TextStyle(fontFamily: 'Tajawal'),
           ),
         ),
       );
@@ -54,10 +55,10 @@ class _PinPageState extends State<PinPage> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "الرمز الذي أدخلته غير صحيح",
-            style: TextStyle(fontFamily: 'Tajawal'),
+            S.of(context, 'incorrect_pin'),
+            style: const TextStyle(fontFamily: 'Tajawal'),
           ),
         ),
       );
@@ -66,12 +67,13 @@ class _PinPageState extends State<PinPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Localizations.localeOf(context).languageCode == 'ar';
     return Scaffold(
       backgroundColor: powderPink,
       appBar: AppBar(
-        title: const Text(
-          "تسجيل الدخول",
-          style: TextStyle(
+        title: Text(
+          S.of(context, 'login'),
+          style: const TextStyle(
             fontFamily: 'Tajawal',
             color: purplePink,
             fontWeight: FontWeight.bold,
@@ -86,15 +88,15 @@ class _PinPageState extends State<PinPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "أدخل الرمز السري",
-              style: TextStyle(
+            Text(
+              S.of(context, 'enter_pin'),
+              style: const TextStyle(
                 fontFamily: 'Tajawal',
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
                 color: purplePink,
               ),
-              textDirection: TextDirection.rtl,
+              textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
             ),
             const SizedBox(height: 20),
             TextField(
@@ -139,9 +141,9 @@ class _PinPageState extends State<PinPage> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  "تأكيد",
-                  style: TextStyle(
+                child: Text(
+                  S.of(context, 'confirm'),
+                  style: const TextStyle(
                     fontFamily: 'Tajawal',
                     fontSize: 20,
                     color: Colors.white,
@@ -159,9 +161,9 @@ class _PinPageState extends State<PinPage> {
                   ),
                 );
               },
-              child: const Text(
-                "نسيت الرمز السري؟",
-                style: TextStyle(
+              child: Text(
+                S.of(context, 'forgot_pin'),
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 18,
                   color: roseGold,

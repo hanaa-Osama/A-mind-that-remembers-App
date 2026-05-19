@@ -1,26 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 
 import 'splash_page.dart';
+import 'theme_provider.dart';
+import 'language_provider.dart';
+import 'translations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  static const Color powderPink = Color(0xFFF4C2C2);
-  static const Color warmBeige = Color(0xFFF5E6D3);
-  static const Color roseGold = Color(0xFFB76E79);
-  static const Color purplePink = Color(0xFFC48BCB);
+  // New calm, minimal color palette
+  static const Color darkBackground = Color(0xFF0D0D0D);
+  static const Color pureWhite = Color(0xFFFFFFFF);
+  static const Color softWhite = Color(0xFFF5F5F5);
+  static const Color lightGray = Color(0xFFE0E0E0);
+  static const Color mediumGray = Color(0xFF9E9E9E);
+  static const Color darkGray = Color(0xFF424242);
+  static const Color accentColor = Color(0xFF2C2C2C);
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "لحظة ذكرى",
+      onGenerateTitle: (context) => S.of(context, 'my_memories'),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -29,39 +47,40 @@ class MyApp extends StatelessWidget {
       supportedLocales: const [
         Locale('ar'),
         Locale('en'),
+        Locale('tr'),
       ],
-      locale: const Locale('ar'),
+      locale: languageProvider.locale, // يستخدم null تلقائياً لاتباع لغة النظام
       theme: ThemeData(
-        scaffoldBackgroundColor: powderPink,
+        scaffoldBackgroundColor: pureWhite,
         fontFamily: 'Tajawal',
         appBarTheme: const AppBarTheme(
-          backgroundColor: powderPink,
+          backgroundColor: pureWhite,
           elevation: 0,
           centerTitle: true,
           titleTextStyle: TextStyle(
             fontFamily: 'Tajawal',
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: purplePink,
+            color: darkGray,
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: darkGray),
         ),
         textTheme: const TextTheme(
           bodyMedium: TextStyle(
-            color: Colors.grey,
+            color: darkGray,
             fontSize: 16,
             fontFamily: 'Tajawal',
           ),
           bodyLarge: TextStyle(
-            color: Colors.grey,
+            color: darkGray,
             fontSize: 18,
             fontFamily: 'Tajawal',
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: roseGold,
-            foregroundColor: Colors.white,
+            backgroundColor: darkGray,
+            foregroundColor: pureWhite,
             textStyle: const TextStyle(
               fontFamily: 'Tajawal',
               fontSize: 18,
@@ -74,24 +93,24 @@ class MyApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: warmBeige,
+          fillColor: softWhite,
           hintStyle: const TextStyle(
-            color: Colors.grey,
+            color: mediumGray,
             fontFamily: 'Tajawal',
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: roseGold),
+            borderSide: const BorderSide(color: lightGray),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: roseGold, width: 2),
+            borderSide: const BorderSide(color: darkGray, width: 2),
           ),
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: powderPink,
-          selectedItemColor: roseGold,
-          unselectedItemColor: Colors.grey,
+          backgroundColor: pureWhite,
+          selectedItemColor: darkGray,
+          unselectedItemColor: mediumGray,
           selectedLabelStyle: TextStyle(
             fontFamily: 'Tajawal',
             fontWeight: FontWeight.bold,

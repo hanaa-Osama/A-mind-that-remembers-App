@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:provider/provider.dart';
 import 'lib/widgets/delete_alert_dialog.dart';
+import 'translations.dart';
+import 'language_provider.dart';
+
 
 class SelfSessionPage extends StatefulWidget {
   const SelfSessionPage({super.key});
@@ -19,50 +22,52 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
   static const Color roseGold = Color(0xFFB76E79);
   static const Color purplePink = Color(0xFFC48BCB);
 
-  final Map<String, List<String>> sections = {
-    "🌷 مشاعر اليوم": [
-      "الشيء الذي منح شعورًا بالسعادة اليوم",
-      "موقف تسبب في بعض التوتر",
-      "لحظة شعر فيها القلب بالامتنان",
-      "أمر استنزف الطاقة خلال اليوم",
-      "لحظة منحت طاقة إيجابية",
-    ],
-    "🤝 العلاقات والناس": [
-      "كلمة لطيفة أو مجاملة تم تلقيها اليوم",
-      "ابتسامة أو تفاعل إنساني لافت",
-      "موقف كان فيه الشخص مصدر سعادة لغيره",
-      "شخص قدّم دعمًا أو مساندة اليوم",
-      "شعور بالاشتياق لشخص ما",
-    ],
-    "📌 الإنجازات والتنظيم": [
-      "إنجاز تحقق خلال اليوم",
-      "مهمة أُنجزت بسهولة",
-      "أمر تم تأجيله مع سبب ذلك",
-      "شيء كان يمكن تغييره لو عاد اليوم",
-      "معرفة أو درس جديد تم تعلمه",
-    ],
-    "🌿 الصحة والطاقة": [
-      "مستوى الطاقة خلال اليوم",
-      "شيء ساعد على الشعور بالراحة النفسية",
-      "مكان أو لحظة منحت إحساسًا بالطمأنينة",
-      "شكل من أشكال العناية بالنفس",
-      "أمنية ليكون الغد أخف أو أهدأ",
-    ],
-    "✨ الامتنان والتأمل": [
-      "أمر واحد يستحق الامتنان اليوم",
-      "كلمة أو عبارة كان لها أثر",
-      "لحظة ابتسامة عفوية",
-      "ذكرى أو خاطر مرّ فجأة",
-      "شيء بسيط صنع شعورًا جميلًا",
-    ],
-    "🧠 أفكار عميقة": [
-      "ما يعكسه المزاج اليوم عن الداخل",
-      "فكرة لم يتم مشاركتها مع أحد",
-      "درس قدّمه هذا اليوم",
-      "خاطرة بقيت حاضرة في القلب",
-      "أمنية تم التفكير فيها اليوم",
-    ],
-  };
+  Map<String, List<String>> getSections(BuildContext context) {
+    return {
+      S.of(context, 'section_feelings'): [
+        S.of(context, 'q1_1'),
+        S.of(context, 'q1_2'),
+        S.of(context, 'q1_3'),
+        S.of(context, 'q1_4'),
+        S.of(context, 'q1_5'),
+      ],
+      S.of(context, 'section_relationships'): [
+        S.of(context, 'q2_1'),
+        S.of(context, 'q2_2'),
+        S.of(context, 'q2_3'),
+        S.of(context, 'q2_4'),
+        S.of(context, 'q2_5'),
+      ],
+      S.of(context, 'section_achievements'): [
+        S.of(context, 'q3_1'),
+        S.of(context, 'q3_2'),
+        S.of(context, 'q3_3'),
+        S.of(context, 'q3_4'),
+        S.of(context, 'q3_5'),
+      ],
+      S.of(context, 'section_health'): [
+        S.of(context, 'q4_1'),
+        S.of(context, 'q4_2'),
+        S.of(context, 'q4_3'),
+        S.of(context, 'q4_4'),
+        S.of(context, 'q4_5'),
+      ],
+      S.of(context, 'section_gratitude'): [
+        S.of(context, 'q5_1'),
+        S.of(context, 'q5_2'),
+        S.of(context, 'q5_3'),
+        S.of(context, 'q5_4'),
+        S.of(context, 'q5_5'),
+      ],
+      S.of(context, 'section_thoughts'): [
+        S.of(context, 'q6_1'),
+        S.of(context, 'q6_2'),
+        S.of(context, 'q6_3'),
+        S.of(context, 'q6_4'),
+        S.of(context, 'q6_5'),
+      ],
+    };
+  }
 
   final Map<String, TextEditingController> controllers = {};
   List<Map<String, dynamic>> sessions = [];
@@ -70,12 +75,19 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
   @override
   void initState() {
     super.initState();
+    _loadSessions();
+  }
+
+  void _initializeControllers(BuildContext context) {
+    final sections = getSections(context);
     for (var section in sections.entries) {
       for (var q in section.value) {
-        controllers["${section.key}::$q"] = TextEditingController();
+        String key = "${section.key}::$q";
+        if (!controllers.containsKey(key)) {
+          controllers[key] = TextEditingController();
+        }
       }
     }
-    _loadSessions();
   }
 
   @override
@@ -94,7 +106,7 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
         .toList()
         .reversed
         .toList();
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Future<void> _saveSession() async {
@@ -132,81 +144,84 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
     );
   }
 
-  void _openSessionDetails(Map<String, dynamic> session) {
+  void _openSessionDetails(Map<String, dynamic> session, Map<String, List<String>> sections) {
     final answers = Map<String, String>.from(session['answers']);
     showDialog(
       context: context,
       builder: (_) {
         final date = DateFormat(
           'EEEE d MMMM yyyy – hh:mm a',
-          'ar',
+          Localizations.localeOf(context).languageCode,
         ).format(DateTime.parse(session['createdAt']));
         return AlertDialog(
           backgroundColor: warmBeige,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: const Text(
-            "🧘 تفاصيل الجلسة",
+          title: Text(
+            S.of(context, 'session_details'),
             textAlign: TextAlign.center,
-            style: TextStyle(color: purplePink, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: purplePink, fontWeight: FontWeight.bold),
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(date, style: const TextStyle(color: Colors.grey)),
-                const SizedBox(height: 12),
-                ...sections.entries.map((section) {
-                  final items = section.value.where(
-                    (q) => answers.containsKey("${section.key}::$q"),
-                  );
-                  if (items.isEmpty) return const SizedBox.shrink();
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 14),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: roseGold),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          section.key,
-                          style: const TextStyle(
-                            color: purplePink,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...items.map(
-                          (q) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  q,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  answers["${section.key}::$q"]!,
-                                  style: const TextStyle(color: Colors.grey),
-                                ),
-                              ],
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(date, style: const TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 12),
+                  ...sections.entries.map((section) {
+                    final items = section.value.where(
+                      (q) => answers.containsKey("${section.key}::$q"),
+                    );
+                    if (items.isEmpty) return const SizedBox.shrink();
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: roseGold),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            section.key,
+                            style: const TextStyle(
+                              color: purplePink,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
+                          const SizedBox(height: 8),
+                          ...items.map(
+                            (q) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    q,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    answers["${section.key}::$q"]!,
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -216,14 +231,14 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                 setState(() {});
                 Navigator.pop(context);
               },
-              child: const Text(
-                "حذف الجلسة",
-                style: TextStyle(color: Colors.red),
+              child: Text(
+                S.of(context, 'delete_session'),
+                style: const TextStyle(color: Colors.red),
               ),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("إغلاق"),
+              child: Text(S.of(context, 'close')),
             ),
           ],
         );
@@ -233,16 +248,23 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
 
   @override
   Widget build(BuildContext context) {
+    _initializeControllers(context);
+    final sections = getSections(context);
+
     return Scaffold(
       backgroundColor: powderPink,
-      appBar: AppBar(title: const Text("🌿 جلسة مع نفسي")),
+      appBar: AppBar(
+        title: Text(S.of(context, 'self_session_title')),
+        backgroundColor: powderPink,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             ...sections.entries.map(
               (section) => Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     section.key,
@@ -259,8 +281,15 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                       child: TextField(
                         controller: controllers["${section.key}::$q"],
                         maxLines: 3,
-                        textAlign: TextAlign.right,
-                        decoration: InputDecoration(hintText: q),
+                        decoration: InputDecoration(
+                          hintText: q,
+                          filled: true,
+                          fillColor: warmBeige,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: roseGold),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -270,19 +299,37 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
             ),
             ElevatedButton(
               onPressed: _saveSession,
-              child: const Text("💾 حفظ الجلسة"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: roseGold,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                S.of(context, 'save_session'),
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
             ),
             const SizedBox(height: 20),
             OutlinedButton.icon(
               icon: const Icon(Icons.folder_open),
-              label: const Text("📚 سجل الجلسات"),
+              label: Text(S.of(context, 'session_history')),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: purplePink,
+                side: const BorderSide(color: purplePink),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
               onPressed: () {
                 if (sessions.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text(
-                        "لا توجد جلسات حتى الآن، ابدأ جلسة جديدة 🌱",
-                        style: TextStyle(fontFamily: 'Tajawal'),
+                        S.of(context, 'no_sessions_yet'),
+                        style: const TextStyle(fontFamily: 'Tajawal'),
                       ),
                       backgroundColor: Colors.orangeAccent,
                       behavior: SnackBarBehavior.floating,
@@ -301,18 +348,23 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                       return StatefulBuilder(
                         builder: (context, modalSetState) {
                           return ListView.builder(
+                            padding: const EdgeInsets.all(16),
                             itemCount: sessions.length,
                             itemBuilder: (_, i) {
                               final s = sessions[i];
                               final date = DateFormat(
                                 'd MMM yyyy – hh:mm a',
-                                'ar',
+                                Localizations.localeOf(context).languageCode,
                               ).format(DateTime.parse(s['createdAt']));
                               return Card(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                                 child: ListTile(
-                                  title: const Text("🧘 جلسة تأمل"),
+                                  title: Text(S.of(context, 'meditation_session')),
                                   subtitle: Text(date),
-                                  onTap: () => _openSessionDetails(s),
+                                  onTap: () => _openSessionDetails(s, sections),
                                   trailing: IconButton(
                                     icon: const Icon(
                                       Icons.delete,
@@ -322,11 +374,10 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                                       final confirm =
                                           await DeleteConfirmDialog.show(
                                             context: context,
-                                            title: 'حذف الجلسة',
-                                            message:
-                                                'هل أنت متأكد من حذف هذه الجلسة؟\nلا يمكن التراجع عن هذا الإجراء.',
-                                            confirmText: 'حذف',
-                                            cancelText: 'إلغاء',
+                                            title: S.of(context, 'delete_session'),
+                                            message: S.of(context, 'confirm_delete_session'),
+                                            confirmText: S.of(context, 'delete'),
+                                            cancelText: S.of(context, 'cancel'),
                                           );
 
                                       if (confirm == true) {
@@ -347,6 +398,7 @@ class _SelfSessionPageState extends State<SelfSessionPage> {
                 }
               },
             ),
+            const SizedBox(height: 30),
           ],
         ),
       ),

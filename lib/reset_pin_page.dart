@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'translations.dart';
 
 import 'pin_page.dart';
 
@@ -23,10 +24,10 @@ class _ResetPinPageState extends State<ResetPinPage> {
 
     if (newPin.length != 4) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "❌ يجب أن يكون الرمز 4 أرقام",
-            style: TextStyle(fontFamily: 'Tajawal'),
+            S.of(context, 'pin_must_be_4_digits'),
+            style: const TextStyle(fontFamily: 'Tajawal'),
           ),
           backgroundColor: Colors.redAccent,
         ),
@@ -51,9 +52,9 @@ class _ResetPinPageState extends State<ResetPinPage> {
         backgroundColor: powderPink,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          "إعادة تعيين الرمز السري",
-          style: TextStyle(
+        title: Text(
+          S.of(context, 'reset_pin_title'),
+          style: const TextStyle(
             fontFamily: 'Tajawal',
             color: purplePink,
             fontWeight: FontWeight.bold,
@@ -65,14 +66,13 @@ class _ResetPinPageState extends State<ResetPinPage> {
         child: Column(
           children: [
             const SizedBox(height: 30),
-            const Text(
-              "أدخل الرمز السري الجديد:",
-              style: TextStyle(
+            Text(
+              S.of(context, 'enter_new_pin'),
+              style: const TextStyle(
                 fontFamily: 'Tajawal',
                 fontSize: 18,
                 color: purplePink,
               ),
-              textDirection: TextDirection.rtl,
             ),
             const SizedBox(height: 20),
             TextField(
@@ -110,9 +110,9 @@ class _ResetPinPageState extends State<ResetPinPage> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                "حفظ",
-                style: TextStyle(
+              child: Text(
+                S.of(context, 'save'),
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 20,
                   color: Colors.white,

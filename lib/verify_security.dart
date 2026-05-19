@@ -1,3 +1,4 @@
+import 'package:lahzet_zikry/translations.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'reset_pin_page.dart';
@@ -64,10 +65,10 @@ class _VerifySecurityPageState extends State<VerifySecurityPage> {
     } else {
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            "❌ هناك إجابة غير صحيحة",
-            style: TextStyle(fontFamily: 'Tajawal'),
+            S.of(context, 'incorrect_answer'),
+            style: const TextStyle(fontFamily: 'Tajawal'),
           ),
           backgroundColor: Colors.redAccent,
         ),
@@ -77,15 +78,16 @@ class _VerifySecurityPageState extends State<VerifySecurityPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Localizations.localeOf(context).languageCode == 'ar';
     return Scaffold(
       backgroundColor: powderPink,
       appBar: AppBar(
         backgroundColor: powderPink,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          "التحقق من الهوية",
-          style: TextStyle(
+        title: Text(
+          S.of(context, 'verify_identity'),
+          style: const TextStyle(
             fontFamily: 'Tajawal',
             color: purplePink,
             fontWeight: FontWeight.bold,
@@ -98,20 +100,21 @@ class _VerifySecurityPageState extends State<VerifySecurityPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
+            crossAxisAlignment: isRtl ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
-              const Text(
-                "أجب عن أسئلة الأمان للمتابعة:",
-                style: TextStyle(
+              Text(
+                S.of(context, 'answer_security_questions'),
+                style: const TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 18,
                   color: purplePink,
                 ),
-                textDirection: TextDirection.rtl,
+                textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
               ),
               const SizedBox(height: 25),
               for (int i = 0; i < 2; i++) ...[
                 Align(
-                  alignment: Alignment.centerRight,
+                  alignment: isRtl ? Alignment.centerRight : Alignment.centerLeft,
                   child: Text(
                     savedQuestions[i],
                     style: TextStyle(
@@ -121,13 +124,13 @@ class _VerifySecurityPageState extends State<VerifySecurityPage> {
                           ? Colors.red
                           : Colors.grey[800],
                     ),
-                    textDirection: TextDirection.rtl,
+                    textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
                   ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: answersControllers[i],
-                  textDirection: TextDirection.rtl,
+                  textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
                   style:
                   const TextStyle(fontFamily: 'Tajawal'),
                   decoration: InputDecoration(
@@ -156,23 +159,25 @@ class _VerifySecurityPageState extends State<VerifySecurityPage> {
                 ),
                 const SizedBox(height: 20),
               ],
-              ElevatedButton(
-                onPressed: verifyAnswers,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: roseGold,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 60, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                    BorderRadius.circular(14),
+              Center(
+                child: ElevatedButton(
+                  onPressed: verifyAnswers,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: roseGold,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 60, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(14),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  "تأكيد",
-                  style: TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 20,
-                    color: Colors.white,
+                  child: Text(
+                    S.of(context, 'confirm'),
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 20,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

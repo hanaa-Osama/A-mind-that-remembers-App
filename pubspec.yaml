@@ -1,11 +1,11 @@
 name: lahzet_zikry
-description: "دفتر إلكتروني عربي لتسجيل الذكريات والمذكرات اليومية"
+description: "Memories - Your personal memory journal"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.4.0+5
 
 environment:
-  sdk: ^3.10.0
+  sdk: ^3.0.0
 
 dependencies:
   flutter:
@@ -26,6 +26,7 @@ dependencies:
   just_audio: ^0.9.38
   path_provider: ^2.1.4
   flutter_local_notifications: ^17.1.2
+  provider: ^6.1.1
 
 dev_dependencies:
   flutter_test:
@@ -36,8 +37,8 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icons/appIcon.png"
-  adaptive_icon_background: "#FFFFFF"
+  image_path: "assets/icons/logo.png"
+  adaptive_icon_background: "#0D0D0D"
 
 flutter:
   uses-material-design: true
