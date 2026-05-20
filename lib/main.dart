@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
         Locale('en'),
         Locale('tr'),
       ],
-      locale: languageProvider.locale, // يستخدم null تلقائياً لاتباع لغة النظام
+      locale: languageProvider.locale,
       theme: ThemeData(
         scaffoldBackgroundColor: pureWhite,
         fontFamily: 'Tajawal',

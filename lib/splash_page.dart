@@ -109,12 +109,12 @@ class _SplashPageState extends State<SplashPage> {
 
                 // Logo
                 Image.asset(
-                  'assets/icons/logo.png',
-                  width: 120,
-                  height: 120,
+                  'assets/icons/logo_transparent.png',
+                  width: 180,
+                  height: 180,
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
 
                 // App Name
                 Text(
@@ -122,14 +122,14 @@ class _SplashPageState extends State<SplashPage> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: 'Tajawal',
-                    fontSize: 32,
-                    fontWeight: FontWeight.w300,
-                    color: softWhiteGray,
-                    letterSpacing: 4,
+                    fontSize: 36,
+                    fontWeight: FontWeight.w200,
+                    color: Colors.white,
+                    letterSpacing: 2,
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // Subtitle
                 Text(
@@ -137,8 +137,8 @@ class _SplashPageState extends State<SplashPage> {
                   style: TextStyle(
                     fontFamily: 'Tajawal',
                     fontSize: 16,
-                    color: softWhiteGray.withOpacity(0.7),
-                    letterSpacing: 1.5,
+                    color: Colors.white.withOpacity(0.6),
+                    letterSpacing: 1.2,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -147,7 +147,7 @@ class _SplashPageState extends State<SplashPage> {
 
                 // Single button at bottom
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -158,13 +158,13 @@ class _SplashPageState extends State<SplashPage> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.15),
-                        foregroundColor: softWhiteGray,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.white.withOpacity(0.1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                           side: BorderSide(
-                            color: softWhiteGray.withOpacity(0.3),
+                            color: Colors.white.withOpacity(0.2),
                             width: 1,
                           ),
                         ),
@@ -173,8 +173,8 @@ class _SplashPageState extends State<SplashPage> {
                       child: Text(
                         S.of(context, 'start_journey'),
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
                           letterSpacing: 2,
                           fontFamily: 'Tajawal',
                         ),
