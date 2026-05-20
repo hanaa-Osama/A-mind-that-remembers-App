@@ -106,16 +106,16 @@ class _SplashPageState extends State<SplashPage> {
             Column(
               children: [
                 const Spacer(flex: 2),
-                
+
                 // Logo
                 Image.asset(
                   'assets/icons/logo.png',
                   width: 120,
                   height: 120,
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // App Name
                 Text(
                   S.of(context, 'my_memories'),
@@ -128,9 +128,9 @@ class _SplashPageState extends State<SplashPage> {
                     letterSpacing: 4,
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Subtitle
                 Text(
                   S.of(context, 'memories_subtitle'),
@@ -142,9 +142,9 @@ class _SplashPageState extends State<SplashPage> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const Spacer(flex: 3),
-                
+
                 // Single button at bottom
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -182,7 +182,7 @@ class _SplashPageState extends State<SplashPage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 50),
               ],
             ),
@@ -236,8 +236,8 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Widget _buildLanguageOption(BuildContext context, String code, String label, LanguageProvider provider) {
-    bool isSelected = (code == 'system' && provider.locale == null) || 
-                      (provider.locale?.languageCode == code);
+    bool isSelected = (code == 'system' && provider.locale == null) ||
+        (provider.locale?.languageCode == code);
     return ListTile(
       title: Text(
         label,
