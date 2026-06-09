@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class S {
   static final Map<String, Map<String, String>> _localizedValues = {
     'en': {
-      'my_memories': 'A mind that remembers',
+      'my_memories': 'My Memories',
       'studio': 'Studio',
       'menu': 'Menu',
       'memories_list': 'Memories List',
@@ -15,7 +15,6 @@ class S {
       'language': 'Language',
       'arabic': 'Arabic',
       'english': 'English',
-      'system_language': 'System Language',
       'refresh': 'Refresh',
       'delete': 'Delete',
       'save_success': 'Saved successfully ✨',
@@ -227,7 +226,7 @@ class S {
       'sq_last_thing_before_sleep': 'What is the thing you cannot leave before sleep?',
     },
     'ar': {
-      'my_memories': 'عقل يتذكر',
+      'my_memories': 'ذكرياتي',
       'studio': 'استديو',
       'menu': 'القائمة',
       'memories_list': 'قائمة الذكريات',
@@ -239,7 +238,6 @@ class S {
       'language': 'اللغة',
       'arabic': 'العربية',
       'english': 'English',
-      'system_language': 'لغة النظام',
       'refresh': 'تحديث',
       'delete': 'حذف',
       'save_success': 'تم الحفظ بنجاح ✨',

@@ -7,8 +7,18 @@ import 'theme_provider.dart';
 import 'language_provider.dart';
 import 'translations.dart';
 
+import 'package:flutter/services.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // توحيد شكل شريط الحالة للأندرويد والأيفون
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
+  ));
+
   runApp(
     MultiProvider(
       providers: [
