@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildNavItem(0, Icons.auto_stories_outlined, Icons.auto_stories, S.of(context, 'my_memories')),
+                _buildNavItem(0, Icons.auto_stories_outlined, Icons.auto_stories, S.of(context, 'my_journal')),
                 _buildNavItem(1, Icons.photo_camera_outlined, Icons.photo_camera, S.of(context, 'studio')),
                 _buildMenuButton(),
               ],

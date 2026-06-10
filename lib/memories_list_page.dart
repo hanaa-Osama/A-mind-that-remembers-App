@@ -69,10 +69,8 @@ class _MemoriesListContentState extends State<MemoriesListContent> {
     setState(() {
       List<Map<String, dynamic>> result = List.from(memories);
       switch (_filterType) {
-        case 'titled': result = result.where((m) => m['title'] != null && m['title'].toString().isNotEmpty).toList(); break;
-        case 'untitled': result = result.where((m) => m['title'] == null || m['title'].toString().isEmpty).toList(); break;
-        case 'withMedia': result = result.where((m) { final pages = m['pages'] as List?; if (pages == null || pages.isEmpty) return false; return pages.any((p) => p['image'] != null || p['video'] != null); }).toList(); break;
-        case 'textOnly': result = result.where((m) { final pages = m['pages'] as List?; if (pages == null || pages.isEmpty) return true; return !pages.any((p) => p['image'] != null || p['video'] != null); }).toList(); break;
+        case 'journal': result = result.where((m) => m['isJournal'] == true).toList(); break;
+        case 'favorite': result = result.where((m) => m['isFavorite'] == true).toList(); break;
       }
       final searchText = searchController.text.trim().toLowerCase();
       if (searchText.isNotEmpty) {
@@ -162,13 +160,9 @@ class _MemoriesListContentState extends State<MemoriesListContent> {
           children: [
             _buildFilterChip(S.of(context, 'all'), 'all'),
             const SizedBox(width: 6),
-            _buildFilterChip(S.of(context, 'titled'), 'titled'),
+            _buildFilterChip(S.of(context, 'my_journal'), 'journal'),
             const SizedBox(width: 6),
-            _buildFilterChip(S.of(context, 'untitled'), 'untitled'),
-            const SizedBox(width: 6),
-            _buildFilterChip(S.of(context, 'with_media'), 'withMedia'),
-            const SizedBox(width: 6),
-            _buildFilterChip(S.of(context, 'text_only'), 'textOnly'),
+            _buildFilterChip(S.of(context, 'favorites'), 'favorite'),
           ],
         ),
       ),

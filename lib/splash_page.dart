@@ -111,8 +111,8 @@ class _SplashPageState extends State<SplashPage> {
                 Center(
                   child: Image.asset(
                     'assets/icons/logo_transparent.png',
-                    width: 250,
-                    height: 250,
+                    width: 550,
+                    height: 550,
                   ),
                 ),
 

@@ -1,6 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.lahzet_zikry">
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
@@ -18,8 +17,7 @@
         android:name="android.hardware.fingerprint"
         android:required="false" />
     <application
-        android:label="A mind that remembers"
-        android:name="${applicationName}"
+        android:label="ذكرياتي"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true">
 
