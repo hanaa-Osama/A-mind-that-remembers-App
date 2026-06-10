@@ -105,16 +105,18 @@ class _SplashPageState extends State<SplashPage> {
           children: [
             Column(
               children: [
-                const Spacer(flex: 2),
+                const Spacer(flex: 3),
 
                 // Logo
-                Image.asset(
-                  'assets/icons/logo_transparent.png',
-                  width: 180,
-                  height: 180,
+                Center(
+                  child: Image.asset(
+                    'assets/icons/logo_transparent.png',
+                    width: 550,
+                    height: 550,
+                  ),
                 ),
 
-                const SizedBox(height: 40),
+                const Spacer(flex: 2),
 
                 // App Name
                 Text(
@@ -226,7 +228,6 @@ class _SplashPageState extends State<SplashPage> {
               _buildLanguageOption(context, 'ar', S.of(context, 'arabic'), provider),
               _buildLanguageOption(context, 'en', S.of(context, 'english'), provider),
               _buildLanguageOption(context, 'tr', S.of(context, 'turkish'), provider),
-              _buildLanguageOption(context, 'system', S.of(context, 'system_language'), provider),
               const SizedBox(height: 10),
             ],
           ),

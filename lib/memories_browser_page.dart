@@ -1,11 +1,8 @@
-import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';
 import 'package:lahzet_zikry/translations.dart';
-import 'package:lahzet_zikry/language_provider.dart';
+import 'data/repositories/memory_repository_impl.dart';
+import 'presentation/memories_browser/memories_browser_presenter.dart';
 
 const Color spaceBlack = Color(0xFF0A0A0F);
 const Color darkGray = Color(0xFF1A1A1F);
@@ -20,9 +17,10 @@ class MemoriesBrowserPage extends StatefulWidget {
   State<MemoriesBrowserPage> createState() => _MemoriesBrowserPageState();
 }
 
-class _MemoriesBrowserPageState extends State<MemoriesBrowserPage> with TickerProviderStateMixin {
+class _MemoriesBrowserPageState extends State<MemoriesBrowserPage> with TickerProviderStateMixin implements MemoriesBrowserView {
   final TextEditingController _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  late MemoriesBrowserPresenter _presenter;
   
   late AnimationController _starsController;
   late AnimationController _shootingStarController;
@@ -34,6 +32,7 @@ class _MemoriesBrowserPageState extends State<MemoriesBrowserPage> with TickerPr
   @override
   void initState() {
     super.initState();
+    _presenter = MemoriesBrowserPresenter(MemoryRepositoryImpl(), this);
     _initAnimations();
     _generateStars();
     _generateShootingStars();
@@ -65,30 +64,25 @@ class _MemoriesBrowserPageState extends State<MemoriesBrowserPage> with TickerPr
     super.dispose();
   }
 
+  // MVP View Implementation
+  @override
+  void showMessage(String message) => _snack(S.of(context, message));
+
+  @override
+  void onSaveSuccess() {
+    _snack(S.of(context, 'save_success'));
+    setState(() => _textController.clear());
+  }
+
   Future<void> _saveMemory() async {
     final text = _textController.text.trim();
     if (text.isEmpty) {
-      _snack(S.of(context, 'write_something'));
+      showMessage('write_something');
       return;
     }
-    final result = await _showSaveTitleDialog();
-    if (result == null) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final dir = await getApplicationDocumentsDirectory();
-      final memoryId = DateTime.now().millisecondsSinceEpoch.toString();
-      final memoryData = {'id': memoryId, 'title': result, 'createdAt': DateTime.now().toIso8601String(), 'type': 'text', 'pages': [{'text': text}]};
-      List<dynamic> memoriesList = [];
-      try {
-        final memoriesJson = prefs.getString('memories');
-        if (memoriesJson != null && memoriesJson.isNotEmpty) memoriesList = jsonDecode(memoriesJson);
-      } catch (e) { memoriesList = []; }
-      memoriesList.add(memoryData);
-      await prefs.setString('memories', jsonEncode(memoriesList));
-      _snack(S.of(context, 'save_success'));
-      setState(() => _textController.clear());
-    } catch (e) {
-      _snack(S.of(context, 'error'));
+    final title = await _showSaveTitleDialog();
+    if (title != null) {
+      await _presenter.saveMemory(text, title);
     }
   }
 
@@ -151,7 +145,7 @@ class _MemoriesBrowserPageState extends State<MemoriesBrowserPage> with TickerPr
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SizedBox(width: 44), // Removed reservation for language icon
+          const SizedBox(width: 44),
           Text(S.of(context, 'memories_space'), style: const TextStyle(fontFamily: 'Tajawal', fontSize: 26, fontWeight: FontWeight.bold, color: starWhite, letterSpacing: 2)),
           GestureDetector(onTap: _saveMemory, child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: darkGray, borderRadius: BorderRadius.circular(12), border: Border.all(color: lightGray, width: 0.5)), child: const Icon(Icons.add, color: starWhite, size: 24))),
         ],
