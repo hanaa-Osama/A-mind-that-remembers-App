@@ -2,12 +2,12 @@ import 'package:lahzet_zikry/translations.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:just_audio/just_audio.dart';
+import 'domain/models/memory.dart';
 
 class MemoryDetailsPage extends StatefulWidget {
-  final Map<String, dynamic> data;
+  final Memory memory;
 
-  const MemoryDetailsPage({required this.data, super.key});
+  const MemoryDetailsPage({required this.memory, super.key});
 
   @override
   State<MemoryDetailsPage> createState() => _MemoryDetailsPageState();
@@ -15,7 +15,6 @@ class MemoryDetailsPage extends StatefulWidget {
 
 class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
   VideoPlayerController? vid;
-  final player = AudioPlayer();
 
   static const Color powderPink = Color(0xFFF4C2C2);
   static const Color warmBeige = Color(0xFFF5E6D3);
@@ -25,33 +24,40 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
   @override
   void initState() {
     super.initState();
+    _initVideo();
+  }
 
-    if (widget.data["video"] != null) {
-      vid = VideoPlayerController.file(File(widget.data["video"]))
-        ..initialize().then((_) {
-          setState(() {});
-        });
+  void _initVideo() {
+    if (widget.memory.pages.isNotEmpty) {
+      final page = widget.memory.pages[0];
+      if (page.video != null) {
+        vid = VideoPlayerController.file(File(page.video!))
+          ..initialize().then((_) {
+            if (mounted) setState(() {});
+          });
+      }
     }
   }
 
   @override
   void dispose() {
     vid?.dispose();
-    player.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = widget.data["image"] != null;
-    final hasVideo = widget.data["video"] != null;
-    final hasAudio = widget.data["audio"] != null;
+    final page = widget.memory.pages.isNotEmpty ? widget.memory.pages[0] : MemoryPageData(text: '');
+    final hasImage = page.image != null;
+    final hasVideo = page.video != null;
+    final createdAt = widget.memory.createdAt;
+    final dateStr = '${createdAt.day}/${createdAt.month}/${createdAt.year}';
 
     return Scaffold(
       backgroundColor: powderPink,
       appBar: AppBar(
         title: Text(
-          widget.data["title"],
+          widget.memory.title.isNotEmpty ? widget.memory.title : S.of(context, 'no_title'),
           style: const TextStyle(
             fontFamily: 'Tajawal',
             color: purplePink,
@@ -61,6 +67,10 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
         backgroundColor: powderPink,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: purplePink),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -68,7 +78,7 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              "📅 ${S.of(context, 'date')}: ${widget.data["date"]}",
+              "📅 ${S.of(context, 'date')}: $dateStr",
               style: const TextStyle(
                 fontFamily: 'Tajawal',
                 fontSize: 18,
@@ -97,7 +107,7 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
                 border: Border.all(color: roseGold),
               ),
               child: Text(
-                widget.data["text"],
+                page.text,
                 textAlign: TextAlign.right,
                 style: const TextStyle(
                   fontFamily: 'Tajawal',
@@ -110,7 +120,7 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
             if (hasImage)
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: Image.file(File(widget.data["image"])),
+                child: Image.file(File(page.image!)),
               ),
             if (hasVideo && vid != null)
               Column(
@@ -142,40 +152,6 @@ class _MemoryDetailsPageState extends State<MemoryDetailsPage> {
                       ),
                     ),
                   ),
-                ],
-              ),
-            if (hasAudio)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    "🎤 ${S.of(context, 'audio_attached')}",
-                    style: const TextStyle(
-                      fontFamily: 'Tajawal',
-                      fontSize: 18,
-                      color: purplePink,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.right,
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () async {
-                      await player.setFilePath(widget.data["audio"]);
-                      player.play();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: roseGold,
-                    ),
-                    child: Text(
-                      S.of(context, 'play_audio'),
-                      style: const TextStyle(
-                        fontFamily: 'Tajawal',
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
                 ],
               ),
           ],

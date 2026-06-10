@@ -1,19 +1,19 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:lahzet_zikry/translations.dart';
+import 'domain/models/media_item.dart';
+import 'domain/models/memory.dart';
+import 'domain/repositories/memory_repository.dart';
+import 'data/repositories/memory_repository_impl.dart';
+import 'presentation/memory_studio/memory_studio_presenter.dart';
 
 const Color spaceBlack = Color(0xFF0A0A0F);
 const Color darkGray = Color(0xFF1A1A1F);
 const Color mediumGray = Color(0xFF2A2A2F);
 const Color lightGray = Color(0xFF4A4A4F);
 const Color starWhite = Color(0xFFE8E8E8);
-const Color textFieldGray = Color(0xFFE0E0E0);
 
 class MemoryPage extends StatefulWidget {
   const MemoryPage({super.key});
@@ -21,10 +21,11 @@ class MemoryPage extends StatefulWidget {
   State<MemoryPage> createState() => _MemoryPageState();
 }
 
-class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
-  final ImagePicker _picker = ImagePicker();
-  List<Map<String, dynamic>> _mediaItems = [];
+class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin implements MemoryStudioView {
+  late MemoryStudioPresenter _presenter;
+  List<MediaItem> _mediaItems = [];
   bool _showGrid = true;
+  bool _isLoading = false;
   
   late AnimationController _starsController;
   late AnimationController _shootingStarController;
@@ -36,10 +37,11 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _presenter = MemoryStudioPresenter(MemoryRepositoryImpl(), this);
     _initAnimations();
     _generateStars();
     _generateShootingStars();
-    _loadAllMedia();
+    _presenter.loadAllMedia();
   }
 
   void _initAnimations() {
@@ -66,69 +68,29 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Future<void> _loadAllMedia() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      List<Map<String, dynamic>> allMedia = [];
-      
-      // Load media from memories
-      final memoriesJson = prefs.getString('memories');
-      if (memoriesJson != null && memoriesJson.isNotEmpty) {
-        final List<dynamic> memories = jsonDecode(memoriesJson);
-        
-        for (var memory in memories) {
-          final pages = memory['pages'] as List?;
-          if (pages != null && pages.isNotEmpty) {
-            for (var page in pages) {
-              final imagePath = page['image']?.toString();
-              final videoPath = page['video']?.toString();
-              final memoryTitle = memory['title']?.toString() ?? '';
-              final memoryId = memory['id']?.toString() ?? '';
-              final createdAt = memory['createdAt']?.toString() ?? '';
-              
-              if (imagePath != null && File(imagePath).existsSync()) {
-                allMedia.add({'type': 'image', 'path': imagePath, 'memoryId': memoryId, 'memoryTitle': memoryTitle, 'createdAt': createdAt, 'isStandalone': false});
-              }
-              if (videoPath != null && File(videoPath).existsSync()) {
-                allMedia.add({'type': 'video', 'path': videoPath, 'memoryId': memoryId, 'memoryTitle': memoryTitle, 'createdAt': createdAt, 'isStandalone': false});
-              }
-            }
-          }
-        }
-      }
-      
-      // Load standalone media (not attached to any memory)
-      final standaloneJson = prefs.getString('standalone_media');
-      if (standaloneJson != null && standaloneJson.isNotEmpty) {
-        final List<dynamic> standaloneList = jsonDecode(standaloneJson);
-        for (var item in standaloneList) {
-          final path = item['path']?.toString();
-          if (path != null && File(path).existsSync()) {
-            allMedia.add({
-              'type': item['type'] ?? 'image',
-              'path': path,
-              'memoryId': '',
-              'memoryTitle': '',
-              'createdAt': item['createdAt'] ?? '',
-              'isStandalone': true,
-              'standaloneId': item['id'] ?? '',
-            });
-          }
-        }
-      }
-      
-      allMedia.sort((a, b) {
-        final dateA = DateTime.tryParse(a['createdAt'] ?? '') ?? DateTime(2000);
-        final dateB = DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime(2000);
-        return dateB.compareTo(dateA);
-      });
-      
-      if (mounted) setState(() => _mediaItems = allMedia);
-    } catch (e) { debugPrint('Load error: $e'); }
+  // MVP View Implementation
+  @override
+  void showLoading() => setState(() => _isLoading = true);
+
+  @override
+  void hideLoading() => setState(() => _isLoading = false);
+
+  @override
+  void displayMedia(List<MediaItem> media) => setState(() => _mediaItems = media);
+
+  @override
+  void displayMemories(List<Memory> memories) {
+    // This will be used in the add to memory dialog
   }
 
+  @override
+  void showMessage(String message) => _snack(message);
+
+  @override
+  void onMediaAdded() => _snack(S.of(context, 'save_success'));
+
   Future<void> _addNewMedia() async {
-    final result = await showModalBottomSheet<String>(
+    final result = await showModalBottomSheet<MediaType>(
       context: context,
       backgroundColor: darkGray,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -144,8 +106,8 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildMediaOption(Icons.image, S.of(context, 'image'), () => Navigator.pop(ctx, 'image')),
-                _buildMediaOption(Icons.videocam, S.of(context, 'video'), () => Navigator.pop(ctx, 'video')),
+                _buildMediaOption(Icons.image, S.of(context, 'image'), () => Navigator.pop(ctx, MediaType.image)),
+                _buildMediaOption(Icons.videocam, S.of(context, 'video'), () => Navigator.pop(ctx, MediaType.video)),
               ],
             ),
             const SizedBox(height: 20),
@@ -153,7 +115,7 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
         ),
       ),
     );
-    if (result != null) await _pickAndSaveMedia(result);
+    if (result != null) await _presenter.pickAndSaveMedia(result);
   }
 
   Widget _buildMediaOption(IconData icon, String label, VoidCallback onTap) {
@@ -167,90 +129,11 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _pickAndSaveMedia(String type) async {
-    try {
-      XFile? file;
-      if (type == 'image') {
-        file = await _picker.pickImage(source: ImageSource.gallery);
-      } else {
-        file = await _picker.pickVideo(source: ImageSource.gallery);
-      }
-      
-      if (file != null) {
-        final prefs = await SharedPreferences.getInstance();
-        final dir = await getApplicationDocumentsDirectory();
-        final mediaId = DateTime.now().millisecondsSinceEpoch.toString();
-        final mediaDir = Directory('${dir.path}/standalone_media/$mediaId');
-        await mediaDir.create(recursive: true);
-        
-        String savedPath = type == 'image' ? '${mediaDir.path}/image_$mediaId.jpg' : '${mediaDir.path}/video_$mediaId.mp4';
-        await File(file.path).copy(savedPath);
-        
-        // Save to standalone_media (not memories)
-        final standaloneData = {'id': mediaId, 'type': type, 'path': savedPath, 'createdAt': DateTime.now().toIso8601String()};
-        
-        List<dynamic> standaloneList = [];
-        try {
-          final standaloneJson = prefs.getString('standalone_media');
-          if (standaloneJson != null && standaloneJson.isNotEmpty) standaloneList = jsonDecode(standaloneJson);
-        } catch (e) { standaloneList = []; }
-        
-        standaloneList.add(standaloneData);
-        await prefs.setString('standalone_media', jsonEncode(standaloneList));
-        _snack('${S.of(context, 'save_success')}');
-        await _loadAllMedia();
-      }
-    } catch (e) { _snack(S.of(context, 'error')); debugPrint('Error: $e'); }
-  }
-
-  void _openMediaViewer(Map<String, dynamic> media) {
-    Navigator.push(context, MaterialPageRoute(builder: (ctx) => MediaViewerPage(media: media, onDelete: () async { await _deleteMedia(media); Navigator.pop(ctx); }, onAddedToMemory: () => _loadAllMedia())));
-  }
-
-  Future<void> _deleteMedia(Map<String, dynamic> media) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Check if it's standalone media
-      if (media['isStandalone'] == true) {
-        final standaloneJson = prefs.getString('standalone_media');
-        if (standaloneJson != null && standaloneJson.isNotEmpty) {
-          List<dynamic> standaloneList = jsonDecode(standaloneJson);
-          standaloneList.removeWhere((item) => item['path'] == media['path']);
-          await prefs.setString('standalone_media', jsonEncode(standaloneList));
-        }
-        try { final f = File(media['path']); if (f.existsSync()) await f.delete(); } catch (e) {}
-        _snack(S.of(context, 'delete'));
-        await _loadAllMedia();
-        return;
-      }
-      
-      // Delete from memory
-      final memoriesJson = prefs.getString('memories');
-      if (memoriesJson == null) return;
-      
-      List<dynamic> memories = jsonDecode(memoriesJson);
-      final memoryIndex = memories.indexWhere((m) => m['id'].toString() == media['memoryId']);
-      
-      if (memoryIndex != -1) {
-        final pages = memories[memoryIndex]['pages'] as List?;
-        if (pages != null && pages.isNotEmpty) {
-          Map<String, dynamic> page = Map.from(pages[0]);
-          page.remove(media['type'] == 'image' ? 'image' : 'video');
-          
-          if (page['text']?.toString().isEmpty == true && page['image'] == null && page['video'] == null) {
-            memories.removeAt(memoryIndex);
-          } else {
-            memories[memoryIndex]['pages'] = [page];
-          }
-          
-          await prefs.setString('memories', jsonEncode(memories));
-          try { final f = File(media['path']); if (f.existsSync()) await f.delete(); } catch (e) {}
-          _snack(S.of(context, 'delete'));
-          await _loadAllMedia();
-        }
-      }
-    } catch (e) { _snack(S.of(context, 'error')); debugPrint('Error: $e'); }
+  void _openMediaViewer(MediaItem media) {
+    Navigator.push(context, MaterialPageRoute(builder: (ctx) => MediaViewerPage(
+      media: media, 
+      presenter: _presenter,
+    )));
   }
 
   void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, textAlign: TextAlign.center), backgroundColor: darkGray, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
@@ -264,7 +147,7 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
           Container(decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [spaceBlack, darkGray, mediumGray, spaceBlack], stops: [0.0, 0.3, 0.7, 1.0]))),
           AnimatedBuilder(animation: _starsController, builder: (context, child) => CustomPaint(painter: StarsPainter(_stars, _starsController.value), size: Size.infinite)),
           AnimatedBuilder(animation: _shootingStarController, builder: (context, child) => CustomPaint(painter: ShootingStarsPainter(_shootingStars, _shootingStarController.value), size: Size.infinite)),
-          SafeArea(child: Column(children: [_buildHeader(), _buildViewToggle(), Expanded(child: _mediaItems.isEmpty ? _buildEmptyState() : (_showGrid ? _buildMediaGrid() : _buildMediaList()))])),
+          SafeArea(child: Column(children: [_buildHeader(), _buildViewToggle(), Expanded(child: _isLoading ? const Center(child: CircularProgressIndicator(color: starWhite)) : (_mediaItems.isEmpty ? _buildEmptyState() : (_showGrid ? _buildMediaGrid() : _buildMediaList())))])),
         ],
       ),
       floatingActionButton: FloatingActionButton(onPressed: _addNewMedia, backgroundColor: starWhite, child: const Icon(Icons.add, color: spaceBlack, size: 28)),
@@ -277,9 +160,9 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SizedBox(width: 22), // Balancing the refresh icon on the right
+          const SizedBox(width: 22), 
           Text(S.of(context, 'studio'), style: const TextStyle(color: starWhite, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2)),
-          GestureDetector(onTap: _loadAllMedia, child: Icon(Icons.refresh, color: starWhite.withOpacity(0.7), size: 22)),
+          GestureDetector(onTap: () => _presenter.loadAllMedia(), child: Icon(Icons.refresh, color: starWhite.withOpacity(0.7), size: 22)),
         ],
       ),
     );
@@ -322,7 +205,7 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
 
   Widget _buildMediaGrid() {
     return RefreshIndicator(
-      onRefresh: _loadAllMedia,
+      onRefresh: () => _presenter.loadAllMedia(),
       color: starWhite,
       backgroundColor: darkGray,
       child: GridView.builder(
@@ -334,14 +217,14 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildGridItem(Map<String, dynamic> media) {
-    final isVideo = media['type'] == 'video';
+  Widget _buildGridItem(MediaItem media) {
+    final isVideo = media.type == MediaType.video;
     return GestureDetector(
       onTap: () => _openMediaViewer(media),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          isVideo ? Container(color: darkGray, child: const Center(child: Icon(Icons.videocam, color: lightGray, size: 32))) : Image.file(File(media['path']), fit: BoxFit.cover, errorBuilder: (ctx, e, s) => Container(color: darkGray, child: const Icon(Icons.broken_image, color: lightGray))),
+          isVideo ? Container(color: darkGray, child: const Center(child: Icon(Icons.videocam, color: lightGray, size: 32))) : Image.file(File(media.path), fit: BoxFit.cover, errorBuilder: (ctx, e, s) => Container(color: darkGray, child: const Icon(Icons.broken_image, color: lightGray))),
           if (isVideo) Positioned(top: 8, right: 8, child: Container(padding: const EdgeInsets.all(4), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(4)), child: const Icon(Icons.play_arrow, color: Colors.white, size: 16))),
         ],
       ),
@@ -350,17 +233,17 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
 
   Widget _buildMediaList() {
     return RefreshIndicator(
-      onRefresh: _loadAllMedia,
+      onRefresh: () => _presenter.loadAllMedia(),
       color: starWhite,
       backgroundColor: darkGray,
       child: ListView.builder(padding: const EdgeInsets.all(12), itemCount: _mediaItems.length, itemBuilder: (ctx, index) => _buildListItem(_mediaItems[index])),
     );
   }
 
-  Widget _buildListItem(Map<String, dynamic> media) {
-    final isVideo = media['type'] == 'video';
-    final title = media['memoryTitle']?.toString() ?? '';
-    final createdAt = DateTime.tryParse(media['createdAt'] ?? '');
+  Widget _buildListItem(MediaItem media) {
+    final isVideo = media.type == MediaType.video;
+    final title = media.memoryTitle ?? '';
+    final createdAt = media.createdAt;
     
     return GestureDetector(
       onTap: () => _openMediaViewer(media),
@@ -372,14 +255,14 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
           children: [
             Stack(
               children: [
-                ClipRRect(borderRadius: const BorderRadius.vertical(top: Radius.circular(12)), child: isVideo ? Container(height: 200, color: darkGray, child: const Center(child: Icon(Icons.videocam, color: lightGray, size: 48))) : Image.file(File(media['path']), height: 200, width: double.infinity, fit: BoxFit.cover, errorBuilder: (ctx, e, s) => Container(height: 200, color: darkGray, child: const Icon(Icons.broken_image, color: lightGray)))),
+                ClipRRect(borderRadius: const BorderRadius.vertical(top: Radius.circular(12)), child: isVideo ? Container(height: 200, color: darkGray, child: const Center(child: Icon(Icons.videocam, color: lightGray, size: 48))) : Image.file(File(media.path), height: 200, width: double.infinity, fit: BoxFit.cover, errorBuilder: (ctx, e, s) => Container(height: 200, color: darkGray, child: const Icon(Icons.broken_image, color: lightGray)))),
                 if (isVideo) Positioned.fill(child: Center(child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(40)), child: const Icon(Icons.play_arrow, color: Colors.white, size: 32)))),
               ],
             ),
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                if (createdAt != null) Text('${createdAt.day}/${createdAt.month}/${createdAt.year}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: starWhite.withOpacity(0.5))),
+                Text('${createdAt.day}/${createdAt.month}/${createdAt.year}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: starWhite.withOpacity(0.5))),
                 if (title.isNotEmpty) Text(title, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: starWhite)),
               ]),
             ),
@@ -391,37 +274,33 @@ class _MemoryPageState extends State<MemoryPage> with TickerProviderStateMixin {
 }
 
 class MediaViewerPage extends StatefulWidget {
-  final Map<String, dynamic> media;
-  final VoidCallback onDelete;
-  final VoidCallback? onAddedToMemory;
-  const MediaViewerPage({super.key, required this.media, required this.onDelete, this.onAddedToMemory});
+  final MediaItem media;
+  final MemoryStudioPresenter presenter;
+  const MediaViewerPage({super.key, required this.media, required this.presenter});
   @override
   State<MediaViewerPage> createState() => _MediaViewerPageState();
 }
 
-class _MediaViewerPageState extends State<MediaViewerPage> {
+class _MediaViewerPageState extends State<MediaViewerPage> implements MemoryStudioView {
   VideoPlayerController? _videoController;
-  List<Map<String, dynamic>> _memories = [];
+  List<Memory> _memories = [];
 
   @override
   void initState() {
     super.initState();
-    if (widget.media['type'] == 'video') {
-      _videoController = VideoPlayerController.file(File(widget.media['path']))..initialize().then((_) => setState(() {}));
+    if (widget.media.type == MediaType.video) {
+      _videoController = VideoPlayerController.file(File(widget.media.path))..initialize().then((_) => setState(() {}));
     }
-    _loadMemories();
+    widget.presenter.loadMemories();
   }
 
-  Future<void> _loadMemories() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final memoriesJson = prefs.getString('memories');
-      if (memoriesJson != null && memoriesJson.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(memoriesJson);
-        setState(() => _memories = decoded.cast<Map<String, dynamic>>());
-      }
-    } catch (e) { debugPrint('Error: $e'); }
-  }
+  // MVP View Implementation for Viewer
+  @override void showLoading() {}
+  @override void hideLoading() {}
+  @override void displayMedia(List<MediaItem> media) {}
+  @override void displayMemories(List<Memory> memories) => setState(() => _memories = memories);
+  @override void showMessage(String message) => _snack(message);
+  @override void onMediaAdded() {}
 
   Future<void> _addToMemory() async {
     if (_memories.isEmpty) {
@@ -429,7 +308,7 @@ class _MediaViewerPageState extends State<MediaViewerPage> {
       return;
     }
 
-    final selectedMemory = await showModalBottomSheet<Map<String, dynamic>>(
+    final selectedMemory = await showModalBottomSheet<Memory>(
       context: context,
       backgroundColor: darkGray,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -448,9 +327,9 @@ class _MediaViewerPageState extends State<MediaViewerPage> {
                 itemCount: _memories.length,
                 itemBuilder: (ctx, index) {
                   final memory = _memories[index];
-                  final title = memory['title']?.toString() ?? '';
-                  final createdAt = DateTime.tryParse(memory['createdAt'] ?? '');
-                  final dateStr = createdAt != null ? '${createdAt.day}/${createdAt.month}/${createdAt.year}' : '';
+                  final title = memory.title;
+                  final createdAt = memory.createdAt;
+                  final dateStr = '${createdAt.day}/${createdAt.month}/${createdAt.year}';
                   
                   return GestureDetector(
                     onTap: () => Navigator.pop(ctx, memory),
@@ -476,46 +355,8 @@ class _MediaViewerPageState extends State<MediaViewerPage> {
     );
 
     if (selectedMemory != null) {
-      await _addMediaToMemory(selectedMemory);
-    }
-  }
-
-  Future<void> _addMediaToMemory(Map<String, dynamic> memory) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final memoriesJson = prefs.getString('memories');
-      if (memoriesJson == null) return;
-
-      List<dynamic> memories = jsonDecode(memoriesJson);
-      final memoryIndex = memories.indexWhere((m) => m['id'].toString() == memory['id'].toString());
-
-      if (memoryIndex != -1) {
-        final pages = memories[memoryIndex]['pages'] as List?;
-        if (pages != null && pages.isNotEmpty) {
-          Map<String, dynamic> page = Map.from(pages[0]);
-          final mediaType = widget.media['type'] == 'image' ? 'image' : 'video';
-          page[mediaType] = widget.media['path'];
-          memories[memoryIndex]['pages'] = [page];
-          await prefs.setString('memories', jsonEncode(memories));
-          
-          // If this was a standalone media, remove it from standalone_media
-          if (widget.media['isStandalone'] == true) {
-            final standaloneJson = prefs.getString('standalone_media');
-            if (standaloneJson != null && standaloneJson.isNotEmpty) {
-              List<dynamic> standaloneList = jsonDecode(standaloneJson);
-              standaloneList.removeWhere((item) => item['path'] == widget.media['path']);
-              await prefs.setString('standalone_media', jsonEncode(standaloneList));
-            }
-          }
-          
-          _snack(S.of(context, widget.media["type"] == "image" ? "image_added" : "video_added"));
-          widget.onAddedToMemory?.call();
-          if (mounted) Navigator.pop(context);
-        }
-      }
-    } catch (e) {
-      _snack(S.of(context, 'error'));
-      debugPrint('Error: $e');
+      await widget.presenter.addMediaToMemory(widget.media, selectedMemory.id);
+      if (mounted) Navigator.pop(context);
     }
   }
 
@@ -542,13 +383,16 @@ class _MediaViewerPageState extends State<MediaViewerPage> {
         ],
       ),
     );
-    if (confirmed == true) widget.onDelete();
+    if (confirmed == true) {
+      await widget.presenter.deleteMedia(widget.media);
+      if (mounted) Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isVideo = widget.media['type'] == 'video';
-    final title = widget.media['memoryTitle']?.toString() ?? '';
+    final isVideo = widget.media.type == MediaType.video;
+    final title = widget.media.memoryTitle ?? '';
     
     return Scaffold(
       backgroundColor: Colors.black,
@@ -573,7 +417,7 @@ class _MediaViewerPageState extends State<MediaViewerPage> {
                 ]),
               )
             : const CircularProgressIndicator(color: starWhite))
-          : InteractiveViewer(child: Image.file(File(widget.media['path']), fit: BoxFit.contain, errorBuilder: (ctx, e, s) => const Icon(Icons.broken_image, color: lightGray, size: 64))),
+          : InteractiveViewer(child: Image.file(File(widget.media.path), fit: BoxFit.contain, errorBuilder: (ctx, e, s) => const Icon(Icons.broken_image, color: lightGray, size: 64))),
       ),
     );
   }
